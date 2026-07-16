@@ -7,6 +7,11 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent))
 

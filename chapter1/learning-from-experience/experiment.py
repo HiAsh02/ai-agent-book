@@ -13,6 +13,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from game_environment import TreasureHuntGame
 from rl_agent import QLearningAgent
