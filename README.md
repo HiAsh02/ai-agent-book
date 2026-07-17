@@ -67,6 +67,8 @@ git clone https://github.com/sierra-research/tau2-bench.git            chapter6/
 git clone https://github.com/laude-institute/terminal-bench.git        chapter6/terminal-bench
 
 # 第 7 章 · 训练框架（bojieli/* 为本书适配的分支）
+git clone https://github.com/bojieli/minimind.git                      chapter7/MiniMind-pretrain/minimind      # 实验 7-3 从零训 LLM
+git clone https://github.com/bojieli/minimind-v.git                    chapter7/MiniMind-pretrain/minimind-v    # 实验 7-4 从零训 VLM（投影层）
 git clone https://github.com/bojieli/AdaptThink.git                    chapter7/AdaptThink-original
 git clone https://github.com/bojieli/AWorld.git                        chapter7/AWorld
 git clone https://github.com/bojieli/SFTvsRL.git                       chapter7/SFTvsRL
