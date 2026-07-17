@@ -51,7 +51,7 @@ DIFY_DATASET_ID=your_dataset_id  # optional
 
 # LLM Configuration (optional)
 LLM_PROVIDER=kimi  # default provider
-LLM_MODEL=kimi-k2-0905-preview  # optional, uses provider defaults
+LLM_MODEL=kimi-k3  # optional, uses provider defaults
 ```
 
 ## 🚀 Usage

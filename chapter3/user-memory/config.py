@@ -11,6 +11,14 @@ from enum import Enum
 load_dotenv()
 
 
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
+
 class MemoryMode(Enum):
     """Memory management modes"""
     NOTES = "notes"  # Simple notes/facts (basic)
@@ -147,7 +155,7 @@ class Config:
         """
         return {
             "model": cls.MODEL_NAME,
-            "temperature": cls.MODEL_TEMPERATURE,
+            "temperature": _reasoning_safe_temperature(cls.MODEL_NAME, cls.MODEL_TEMPERATURE),
             "max_tokens": cls.MODEL_MAX_TOKENS
         }
     

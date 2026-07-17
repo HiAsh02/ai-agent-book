@@ -105,7 +105,7 @@ class Config:
                 "provider": "kimi",
                 "api_key": api_key,
                 "base_url": "https://api.moonshot.cn/v1",
-                "model": cls.MODEL or "kimi-k2-0905-preview"
+                "model": cls.MODEL or "kimi-k3"
             }
         elif provider == "openrouter":
             return {

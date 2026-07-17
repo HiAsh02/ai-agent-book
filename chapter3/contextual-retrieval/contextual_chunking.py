@@ -18,6 +18,14 @@ import time
 from openai import OpenAI
 from config import ChunkingConfig, KnowledgeBaseConfig, KnowledgeBaseType, LLMConfig
 
+
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -409,7 +417,7 @@ Please give a short succinct context to situate this chunk within the overall do
                 messages=[
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.3,  # Low temperature for consistency
+                temperature=_reasoning_safe_temperature(self.model, 0.3),  # Low temperature for consistency
                 max_tokens=100  # Anthropic mentions 50-100 tokens typically
             )
             

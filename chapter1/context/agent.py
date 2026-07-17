@@ -24,6 +24,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
+
 class ContextMode(Enum):
     """Different context modes for ablation studies"""
     FULL = "full"  # Complete context with all components
@@ -342,7 +350,7 @@ class ContextAwareAgent:
                 api_key=api_key,
                 base_url="https://api.moonshot.cn/v1"
             )
-            self.model = model or "kimi-k2-0905-preview"
+            self.model = model or "kimi-k3"
         else:
             raise ValueError(f"Unsupported provider: {provider}. Use 'siliconflow', 'doubao', 'kimi', or 'moonshot'")
         
@@ -583,7 +591,7 @@ Important: When you have gathered all necessary information and computed the fin
                 request_data = {
                     "model": self.model,
                     "messages": messages,
-                    "temperature": 0.3,
+                    "temperature": _reasoning_safe_temperature(self.model, 0.3),
                     "max_tokens": 8192
                 }
                 
@@ -599,7 +607,7 @@ Important: When you have gathered all necessary information and computed the fin
                     messages=messages,
                     tools=self._get_tools_description() if self.context_mode != ContextMode.NO_TOOL_CALLS else None,
                     tool_choice="auto" if self.context_mode != ContextMode.NO_TOOL_CALLS else None,
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=8192,
                     timeout=180  # Add 180 second timeout for main execution
                 )

@@ -1,5 +1,5 @@
 """
-LLM-based Agent using In-Context Learning with Kimi K2 API.
+LLM-based Agent using In-Context Learning with Kimi K3 API.
 This demonstrates how LLMs can generalize through reasoning without extensive training.
 """
 
@@ -10,6 +10,14 @@ from typing import Dict, List, Tuple, Any, Optional
 from dataclasses import dataclass, asdict
 import openai
 from game_environment import TreasureHuntGame
+
+
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
 
 
 @dataclass
@@ -30,16 +38,16 @@ class LLMAgent:
     
     def __init__(self, 
                  api_key: str = None,
-                 model: str = "kimi-k2-0905-preview",  # Kimi K2 model
+                 model: str = "kimi-k3",  # Kimi K3 model
                  base_url: str = "https://api.moonshot.cn/v1",
                  temperature: float = 0.7,
                  max_experiences: int = 50):
         """
-        Initialize LLM agent with Kimi K2 API.
+        Initialize LLM agent with Kimi K3 API.
         
         Args:
             api_key: Kimi API key (or set MOONSHOT_API_KEY env var)
-            model: Model name for Kimi K2
+            model: Model name for Kimi K3
             base_url: API base URL
             temperature: Sampling temperature for generation
             max_experiences: Maximum number of experiences to store
@@ -172,14 +180,14 @@ ACTION: take red key
         try:
             print("\n🤔 LLM is thinking...")
             
-            # Call Kimi K2 API
+            # Call Kimi K3 API
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are an intelligent game-playing agent that learns from experience."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=self.temperature,
+                temperature=_reasoning_safe_temperature(self.model, self.temperature),
                 max_tokens=500
             )
             

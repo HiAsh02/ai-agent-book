@@ -21,6 +21,14 @@ import tempfile
 import shutil
 from pathlib import Path
 
+
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -83,7 +91,7 @@ class SystemHintAgent:
         
         Args:
             api_key: API key for the LLM provider
-            provider: LLM provider ('kimi' for Kimi K2)
+            provider: LLM provider ('kimi' for Kimi K3)
             model: Optional model override
             config: System hint configuration
             verbose: If True, log full details
@@ -98,7 +106,7 @@ class SystemHintAgent:
                 api_key=api_key,
                 base_url="https://api.moonshot.cn/v1"
             )
-            self.model = model or "kimi-k2-0905-preview"
+            self.model = model or "kimi-k3"
         else:
             raise ValueError(f"Unsupported provider: {provider}")
         
@@ -818,7 +826,7 @@ Important: When you have completed all tasks, clearly state "FINAL ANSWER:" foll
                     messages=messages_to_send,
                     tools=self._get_tools_description(),
                     tool_choice="auto",
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=8192
                 )
                 

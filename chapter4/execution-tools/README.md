@@ -49,7 +49,7 @@ KIMI_API_KEY=your_kimi_key
 # OPENROUTER_API_KEY=your_openrouter_key
 
 # Model (optional, defaults to provider's default)
-# MODEL=kimi-k2-0905-preview
+# MODEL=kimi-k3
 
 # Model parameters
 TEMPERATURE=0.7
@@ -68,7 +68,7 @@ AUTO_VERIFY_CODE=true
 **Supported Providers:**
 - `siliconflow`: Qwen/Qwen3-235B-A22B-Thinking-2507
 - `doubao`: doubao-seed-1-6-thinking-250715  
-- `kimi`/`moonshot`: kimi-k2-0905-preview
+- `kimi`/`moonshot`: kimi-k3
 - `openrouter`: google/gemini-2.5-pro (or openai/gpt-5, anthropic/claude-sonnet-4)
 
 ## Usage

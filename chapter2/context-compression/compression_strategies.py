@@ -12,6 +12,14 @@ from openai import OpenAI
 import tiktoken
 from config import Config
 
+
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format=Config.LOG_FORMAT)
 logger = logging.getLogger(__name__)
@@ -157,7 +165,7 @@ Provide a focused summary:"""
                         {"role": "system", "content": "You are a helpful assistant that creates concise summaries."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=Config.SUMMARY_MAX_TOKENS,
                     stream=True
                 )
@@ -177,7 +185,7 @@ Provide a focused summary:"""
                         {"role": "system", "content": "You are a helpful assistant that creates concise summaries."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=Config.SUMMARY_MAX_TOKENS
                 )
                 compressed = response.choices[0].message.content
@@ -269,7 +277,7 @@ Provide a concise summary:"""
                             {"role": "system", "content": "You are a helpful assistant that creates concise summaries."},
                             {"role": "user", "content": prompt}
                         ],
-                        temperature=0.3,
+                        temperature=_reasoning_safe_temperature(self.model, 0.3),
                         max_tokens=300,
                         stream=True
                     )
@@ -289,7 +297,7 @@ Provide a concise summary:"""
                             {"role": "system", "content": "You are a helpful assistant that creates concise summaries."},
                             {"role": "user", "content": prompt}
                         ],
-                        temperature=0.3,
+                        temperature=_reasoning_safe_temperature(self.model, 0.3),
                         max_tokens=300
                     )
                     summary = response.choices[0].message.content
@@ -378,7 +386,7 @@ Provide a comprehensive summary:"""
                         {"role": "system", "content": "You are a helpful assistant that creates comprehensive summaries."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=Config.SUMMARY_MAX_TOKENS,
                     stream=True
                 )
@@ -398,7 +406,7 @@ Provide a comprehensive summary:"""
                         {"role": "system", "content": "You are a helpful assistant that creates comprehensive summaries."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=Config.SUMMARY_MAX_TOKENS
                 )
                 summary = response.choices[0].message.content
@@ -486,7 +494,7 @@ Provide a query-focused summary:"""
                         {"role": "system", "content": "You are a helpful assistant that creates focused, context-aware summaries."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=Config.SUMMARY_MAX_TOKENS,
                     stream=True
                 )
@@ -506,7 +514,7 @@ Provide a query-focused summary:"""
                         {"role": "system", "content": "You are a helpful assistant that creates focused, context-aware summaries."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=Config.SUMMARY_MAX_TOKENS
                 )
                 summary = response.choices[0].message.content
@@ -598,7 +606,7 @@ Provide a query-focused summary with citations:"""
                         {"role": "system", "content": "You are a helpful assistant that creates focused summaries with proper citations."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=Config.SUMMARY_MAX_TOKENS,
                     stream=True
                 )
@@ -618,7 +626,7 @@ Provide a query-focused summary with citations:"""
                         {"role": "system", "content": "You are a helpful assistant that creates focused summaries with proper citations."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.3,
+                    temperature=_reasoning_safe_temperature(self.model, 0.3),
                     max_tokens=Config.SUMMARY_MAX_TOKENS
                 )
                 summary = response.choices[0].message.content

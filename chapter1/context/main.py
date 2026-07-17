@@ -822,7 +822,7 @@ def interactive_mode(api_key: str, provider: str = "siliconflow", model: str = N
                     elif p == "doubao":
                         print(f"  - doubao: ByteDance model{status}")
                     elif p in ["kimi", "moonshot"]:
-                        print(f"  - {p}: Moonshot Kimi K2 model{status}")
+                        print(f"  - {p}: Moonshot Kimi K3 model{status}")
             
             elif user_input.lower().startswith('provider '):
                 new_provider = user_input[9:].strip().lower()

@@ -73,7 +73,7 @@ cd projects/week1/learning-from-experience
 pip install -r requirements.txt
 ```
 
-### Setting up Kimi K2 API
+### Setting up Kimi K3 API
 
 To run the LLM experiments, you need a Kimi (Moonshot) API key:
 
@@ -221,9 +221,9 @@ learning-from-experience/
 - **Discount Factor**: 0.95
 - **Exploration**: ε starts at 1.0, decays to 0.01
 
-### LLM Agent (Kimi K2)
+### LLM Agent (Kimi K3)
 
-- **Model**: Moonshot-v1-auto (Kimi K2)
+- **Model**: kimi-k3 (Kimi K3)
 - **Learning Method**: In-context learning with experience memory
 - **Context Management**: Stores successful and failed experiences
 - **Reasoning**: Prompts LLM to reason about past experiences before acting

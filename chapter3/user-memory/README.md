@@ -234,7 +234,7 @@ python main.py --mode evaluation \
 
 | Provider | Models | Best For |
 |----------|--------|----------|
-| **Kimi/Moonshot** | kimi-k2-0905-preview | Chinese language, general tasks |
+| **Kimi/Moonshot** | kimi-k3 | Chinese language, general tasks |
 | **SiliconFlow** | Qwen3-235B-A22B-Thinking | High performance, reasoning |
 | **Doubao** | doubao-seed-1-6-thinking | ByteDance ecosystem, reasoning |
 | **OpenRouter** | Gemini 2.5 Pro, GPT-5, Claude Sonnet 4 | Multiple top-tier models |

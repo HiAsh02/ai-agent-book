@@ -6,6 +6,14 @@ from openai import OpenAI
 from config import Config
 
 
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
+
 class LLMHelper:
     """Helper class for LLM-based operations."""
     
@@ -67,7 +75,7 @@ Respond in JSON format:
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
+                temperature=_reasoning_safe_temperature(self.model, 0.1),
                 max_tokens=Config.MAX_TOKENS
             )
             
@@ -116,7 +124,7 @@ Provide a concise summary that captures the essential information."""
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
+                temperature=_reasoning_safe_temperature(self.model, 0.1),
                 max_tokens=Config.MAX_TOKENS
             )
             
@@ -168,7 +176,7 @@ Be concise and practical."""
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.2,
+                temperature=_reasoning_safe_temperature(self.model, 0.2),
                 max_tokens=Config.MAX_TOKENS
             )
             
@@ -225,7 +233,7 @@ Respond in JSON format:
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
+                temperature=_reasoning_safe_temperature(self.model, 0.1),
                 max_tokens=Config.MAX_TOKENS
             )
             

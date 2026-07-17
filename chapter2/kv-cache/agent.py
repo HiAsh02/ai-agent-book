@@ -18,6 +18,15 @@ from openai import OpenAI
 import glob as glob_module
 import subprocess
 
+
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -321,7 +330,7 @@ class KVCacheAgent:
     """
     
     def __init__(self, api_key: str, mode: KVCacheMode = KVCacheMode.CORRECT,
-                 model: str = "kimi-k2-0905-preview", root_dir: str = ".",
+                 model: str = "kimi-k3", root_dir: str = ".",
                  verbose: bool = True):
         """
         Initialize the agent
@@ -618,7 +627,7 @@ Always think step by step and use tools to gather information. When you have eno
             request_data = {
                 "model": self.model,
                 "messages": messages,
-                "temperature": 0.7,
+                "temperature": _reasoning_safe_temperature(self.model, 0.7),
                 "max_tokens": 2000
             }
             

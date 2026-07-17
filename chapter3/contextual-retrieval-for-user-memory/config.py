@@ -7,6 +7,14 @@ from enum import Enum
 from pathlib import Path
 
 
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
+
 class Provider(str, Enum):
     """Supported LLM providers"""
     SILICONFLOW = "siliconflow"
@@ -55,11 +63,11 @@ class LLMConfig:
             "base_url": "https://ark.cn-beijing.volces.com/api/v3"
         },
         "kimi": {
-            "model": "kimi-k2-0905-preview",
+            "model": "kimi-k3",
             "base_url": "https://api.moonshot.cn/v1"
         },
         "moonshot": {
-            "model": "kimi-k2-0905-preview",
+            "model": "kimi-k3",
             "base_url": "https://api.moonshot.cn/v1"
         },
         "openrouter": {
@@ -191,7 +199,7 @@ class Config:
             "llm": {
                 "provider": self.llm.provider,
                 "model": self.llm.model,
-                "temperature": self.llm.temperature,
+                "temperature": _reasoning_safe_temperature(self.llm.model, self.llm.temperature),
                 "max_tokens": self.llm.max_tokens,
                 "stream": self.llm.stream
             },

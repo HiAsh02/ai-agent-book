@@ -107,7 +107,7 @@ OPENAI_API_KEY=your_api_key_here
 LLM_PROVIDER=kimi  # Options: kimi, doubao, siliconflow, openai
 
 # Model Settings
-LLM_MODEL=kimi-k2-0905-preview  # 或其他模型
+LLM_MODEL=kimi-k3  # 或其他模型
 ```
 
 ### 3. 启动检索管道服务

@@ -68,7 +68,7 @@ KIMI_API_KEY=your-key
 **Supported Providers:**
 - **SiliconFlow**: `SILICONFLOW_API_KEY` - Uses Qwen/Qwen3-235B-A22B-Thinking-2507
 - **Doubao**: `DOUBAO_API_KEY` - Uses doubao-seed-1-6-thinking-250715
-- **Kimi/Moonshot**: `KIMI_API_KEY` - Uses kimi-k2-0905-preview (default)
+- **Kimi/Moonshot**: `KIMI_API_KEY` - Uses kimi-k3 (default)
 - **OpenRouter**: `OPENROUTER_API_KEY` - Uses google/gemini-2.5-pro
 
 3. (Optional) Configure external services:

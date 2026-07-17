@@ -21,7 +21,7 @@ class Config:
     SERPER_BASE_URL: str = "https://google.serper.dev"
     
     # Model Configuration
-    MODEL_NAME: str = os.getenv("MODEL_NAME", "kimi-k2-0905-preview")
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "kimi-k3")
     MODEL_TEMPERATURE: float = float(os.getenv("MODEL_TEMPERATURE", "0.3"))
     MODEL_MAX_TOKENS: int = int(os.getenv("MODEL_MAX_TOKENS", "8192"))
     
@@ -34,7 +34,7 @@ class Config:
     SUMMARY_MAX_TOKENS: int = int(os.getenv("SUMMARY_MAX_TOKENS", "500"))
     
     # Context Window Configuration
-    CONTEXT_WINDOW_SIZE: int = 128000  # 128K context window for Kimi K2
+    CONTEXT_WINDOW_SIZE: int = 128000  # 128K context budget for the compression demo (K3 supports up to 1M)
     
     # Logging Configuration
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

@@ -28,7 +28,7 @@ This project implements a context-aware AI agent with multiple tools (PDF parsin
 - **Best for**: Complex reasoning tasks, detailed analysis
 
 ### Kimi (Moonshot AI)
-- **Model**: kimi-k2-0905-preview (K2 model)
+- **Model**: kimi-k3 (K2 model)
 - **API**: OpenAI-compatible via Moonshot platform
 - **Best for**: Advanced reasoning, multi-turn conversations, both English and Chinese tasks
 - **Features**: Context caching for cost optimization
@@ -108,7 +108,7 @@ python main.py --model doubao-seed-1-6-thinking-250715
 ### 3. Testing Kimi Integration
 
 ```bash
-# Quick test of Kimi K2 model
+# Quick test of Kimi K3 model
 export MOONSHOT_API_KEY=your_key_here
 python test_kimi.py
 

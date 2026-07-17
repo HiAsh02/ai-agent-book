@@ -15,6 +15,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
+
 def search_impl(arguments: Dict[str, Any]) -> Any:
     """
     When using the search tool provided by Moonshot AI, you just need to return the arguments as they are,
@@ -55,7 +63,7 @@ class WebSearchAgent:
             api_key=api_key,
             base_url=base_url
         )
-        self.model = "kimi-k2-0905-preview"
+        self.model = "kimi-k3"
         self.conversation_history = []
         self.temperature = 0.6
         
@@ -104,7 +112,7 @@ class WebSearchAgent:
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
-            temperature=self.temperature,
+            temperature=_reasoning_safe_temperature(self.model, self.temperature),
             tools=self._get_tools()
         )
         return completion.choices[0]

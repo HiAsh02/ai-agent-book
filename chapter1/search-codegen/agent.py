@@ -17,6 +17,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
+
 class ToolType(Enum):
     """Enum for GPT-5 native tool types"""
     WEB_SEARCH = "web_search"
@@ -196,7 +204,7 @@ Remember: These are native tools built into your capabilities, use them naturall
             
             # Add temperature and max_tokens if specified
             if temperature is not None:
-                request_body["temperature"] = temperature
+                request_body["temperature"] = _reasoning_safe_temperature(self.model, temperature)
             if max_tokens:
                 request_body["max_tokens"] = max_tokens
             

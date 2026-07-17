@@ -237,7 +237,7 @@ export KIMI_API_KEY="your-key"
 
 # Optional
 export LLM_PROVIDER="kimi"              # kimi, siliconflow, doubao, openrouter
-export LLM_MODEL="kimi-k2-0905-preview" # Override default model
+export LLM_MODEL="kimi-k3" # Override default model
 export AGENT_PORT="8000"                # Server port (default: 8000)
 export ENABLE_MCP_TOOLS="true"          # Enable MCP (default: true)
 ```

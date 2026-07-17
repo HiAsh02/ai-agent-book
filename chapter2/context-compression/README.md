@@ -66,7 +66,7 @@ cp env.example .env
 ```
 
 Required API keys:
-- `MOONSHOT_API_KEY`: For Kimi K2 model (required)
+- `MOONSHOT_API_KEY`: For Kimi K3 model (required)
 - `SERPER_API_KEY`: For web search (optional, will use mock data if not provided)
 
 Get API keys:
@@ -210,7 +210,7 @@ Based on the compression strategies:
 
 Edit `.env` or `config.py` for:
 
-- `MODEL_NAME`: LLM model to use (default: kimi-k2-0905-preview)
+- `MODEL_NAME`: LLM model to use (default: kimi-k3)
 - `MODEL_TEMPERATURE`: Response randomness (default: 0.3)
 - `MAX_ITERATIONS`: Maximum tool calls (default: 50)
 - `MAX_WEBPAGE_LENGTH`: Max chars per webpage (default: 50000)

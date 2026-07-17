@@ -8,7 +8,7 @@ The User Memory System now supports multiple LLM providers, allowing you to choo
 - **Provider names**: `kimi` or `moonshot`
 - **API Key**: `MOONSHOT_API_KEY`
 - **Base URL**: `https://api.moonshot.cn/v1`
-- **Default Model**: `kimi-k2-0905-preview`
+- **Default Model**: `kimi-k3`
 
 ### 2. **SiliconFlow**
 - **Provider name**: `siliconflow`

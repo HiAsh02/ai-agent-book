@@ -27,6 +27,15 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.types import TextContent
 
+
+def _reasoning_safe_temperature(model, requested=1.0):
+    """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
+    Return 1 for those; otherwise the requested value so non-reasoning
+    providers (Doubao, DeepSeek, older Moonshot) are unchanged."""
+    m = str(model or "").lower().replace("/", "-")
+    return 1 if ("kimi-k3" in m or "gpt-5" in m) else requested
+
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -245,7 +254,7 @@ class EventTriggeredAgent:
                 api_key=api_key,
                 base_url="https://api.moonshot.cn/v1"
             )
-            self.model = model or "kimi-k2-0905-preview"
+            self.model = model or "kimi-k3"
         elif self.provider == "openrouter":
             self.client = OpenAI(
                 api_key=api_key,
@@ -1049,7 +1058,7 @@ Important: When you have completed all tasks, clearly state "FINAL ANSWER:" foll
                     messages=messages_to_send,
                     tools=self._get_tools_description(),
                     tool_choice="auto",
-                    temperature=self.config.temperature,
+                    temperature=_reasoning_safe_temperature(self.model, self.config.temperature),
                     max_tokens=self.config.max_tokens
                 )
                 

@@ -14,7 +14,7 @@ class Config:
     # Kimi API Settings (also accept MOONSHOT_API_KEY for compatibility)
     KIMI_API_KEY: str = os.getenv("KIMI_API_KEY") or os.getenv("MOONSHOT_API_KEY", "")
     KIMI_BASE_URL: str = os.getenv("KIMI_BASE_URL", "https://api.moonshot.cn/v1")
-    KIMI_MODEL: str = os.getenv("KIMI_MODEL", "moonshot-v1-32k")
+    KIMI_MODEL: str = os.getenv("KIMI_MODEL", "kimi-k3")
     
     # OpenAI API Settings (alternative)
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")

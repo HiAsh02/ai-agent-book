@@ -129,7 +129,7 @@ class ExperimentRunner:
             stochastic: Whether to use stochastic environment
         """
         print("\n" + "="*70)
-        print("LLM-BASED IN-CONTEXT LEARNING EXPERIMENT (KIMI K2)")
+        print("LLM-BASED IN-CONTEXT LEARNING EXPERIMENT (KIMI K3)")
         print("="*70)
         
         # Check for API key
@@ -141,13 +141,13 @@ class ExperimentRunner:
             return None
         
         print("\n✅ API key found. Initializing LLM agent...")
-        print("🧠 Using Kimi K2 model for reasoning and in-context learning")
+        print("🧠 Using Kimi K3 model for reasoning and in-context learning")
         print("📖 The LLM will show its complete thought process for each decision")
         
         # Initialize agent
         agent = LLMAgent(
             api_key=api_key,
-            model="kimi-k2-0905-preview",  # Updated to K2 model
+            model="kimi-k3",  # Updated to K2 model
             temperature=0.7,
             max_experiences=50
         )

@@ -4,7 +4,7 @@ A comprehensive demonstration of KV (Key-Value) cache importance in LLMs using a
 
 ## 🎯 Overview
 
-This project implements a ReAct (Reasoning and Acting) agent that uses the Kimi K2 model to analyze code projects. The agent uses the standard OpenAI tool calling format (similar to week1/context) and demonstrates six different implementation patterns - one correct and five incorrect - showing how seemingly minor changes can invalidate KV cache and dramatically impact performance.
+This project implements a ReAct (Reasoning and Acting) agent that uses the Kimi K3 model to analyze code projects. The agent uses the standard OpenAI tool calling format (similar to week1/context) and demonstrates six different implementation patterns - one correct and five incorrect - showing how seemingly minor changes can invalidate KV cache and dramatically impact performance.
 
 ### What is KV Cache?
 
@@ -311,7 +311,7 @@ Based on this demonstration, follow these practices:
 - Ensure stable network connection
 
 ### Zero Cache Hits
-- Confirm using Kimi K2 model (supports caching)
+- Confirm using Kimi K3 model (supports caching)
 - Check if context is actually stable
 - Review logs for cache invalidation patterns
 

@@ -48,11 +48,11 @@ class LLMConfig:
             "base_url": "https://ark.cn-beijing.volces.com/api/v3"
         },
         "kimi": {
-            "model": "kimi-k2-0905-preview",
+            "model": "kimi-k3",
             "base_url": "https://api.moonshot.cn/v1"
         },
         "moonshot": {
-            "model": "kimi-k2-0905-preview",
+            "model": "kimi-k3",
             "base_url": "https://api.moonshot.cn/v1"
         },
         "openrouter": {
