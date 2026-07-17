@@ -816,8 +816,10 @@ Claude API 的快速入门示例和最佳实践，涵盖各种使用场景。
 
 <a href="https://star-history.com/#bojieli/ai-agent-book&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=bojieli/ai-agent-book&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=bojieli/ai-agent-book&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=bojieli/ai-agent-book&type=Date" width="720" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/bojieli/ai-agent-book/star-history/assets/my-star-history/star-history-dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/bojieli/ai-agent-book/star-history/assets/my-star-history/star-history-light.svg" />
+    <img alt="Star History Chart" src="https://raw.githubusercontent.com/bojieli/ai-agent-book/star-history/assets/my-star-history/star-history-light.svg" width="720" />
   </picture>
 </a>
+
+<sub>图表由 [GitHub Actions 定时任务](.github/workflows/star-history.yml) 每周自动生成 star-history 风格图并提交到 <code>star-history</code> 分支，本地托管、不受外部限流影响；点击可跳转到 star-history.com 查看实时数据。</sub>
