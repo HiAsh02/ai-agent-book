@@ -622,3 +622,13 @@ Claude API 的快速入门示例和最佳实践，涵盖各种使用场景。
 ## 📄 许可证
 
 本项目代码仅供学习参考，具体许可证信息请查看各子项目。
+
+## ⭐ Star History
+
+<a href="https://star-history.com/#bojieli/ai-agent-book&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=bojieli/ai-agent-book&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=bojieli/ai-agent-book&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=bojieli/ai-agent-book&type=Date" />
+  </picture>
+</a>
