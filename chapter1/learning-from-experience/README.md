@@ -76,7 +76,7 @@ pip install -r requirements.txt
 > 对应书中**实验 7-1（Q-learning 在寻宝游戏中的表现）**与**实验 7-2（传统 RL 与 LLM Agent 的对比研究）**。
 > Q-learning 部分完全离线运行、无需任何 API Key；LLM 部分需要 Moonshot/Kimi API Key。
 
-### Setting up Kimi K2 API
+### Setting up Kimi K3 API
 
 To run the LLM experiments, you need a Kimi (Moonshot) API key:
 
@@ -122,7 +122,7 @@ python experiment.py --help
 | `--llm-episodes` | LLM Agent 训练局数 | `20` |
 | `--eval-episodes` | Q-learning 训练后贪婪评估局数 | `100` |
 | `--checkpoint-interval` | 学习曲线采样间隔（每 N 局记录一次胜率/Q 表规模） | `1000` |
-| `--model` | LLM 模型名（也可用 `MOONSHOT_MODEL` 环境变量） | `kimi-k2-0711-preview` |
+| `--model` | LLM 模型名（也可用 `MOONSHOT_MODEL` 环境变量） | `kimi-k3` |
 | `--output` | 结果输出目录 | `results` |
 | `--seed` | 随机种子，用于复现 Q-learning 学习曲线 | 不固定 |
 | `--learning-rate` / `--discount` / `--epsilon-decay` / `--epsilon-min` | Q-learning 超参数 | `0.2 / 0.99 / 0.9995 / 0.1` |
@@ -141,7 +141,7 @@ python experiment.py --mode qlearning --rl-episodes 10000 --seed 42
 #### Full Comparison (RL vs LLM，实验 7-2)
 
 ```bash
-python experiment.py --mode both --model kimi-k2-0711-preview
+python experiment.py --mode both --model kimi-k3
 ```
 
 This will:
@@ -259,9 +259,9 @@ learning-from-experience/
 - **Discount Factor**: 0.99 (configurable via `--discount`)
 - **Exploration**: ε starts at 1.0, decays by `--epsilon-decay` (0.9995) to `--epsilon-min` (0.1)
 
-### LLM Agent (Kimi K2)
+### LLM Agent (Kimi K3)
 
-- **Model**: `kimi-k2-0711-preview` (Kimi K2; override with `--model` or `MOONSHOT_MODEL`)
+- **Model**: `kimi-k3` (Kimi K3; override with `--model` or `MOONSHOT_MODEL`)
 - **Learning Method**: In-context learning with experience memory (up to 50 experiences)
 - **Context Management**: Stores successful and failed experiences
 - **Reasoning**: Prompts LLM to reason about past experiences before acting

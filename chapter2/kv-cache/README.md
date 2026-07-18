@@ -147,7 +147,7 @@ The CLI ships Chinese `--help`; run `python main.py --help` for the full list. K
 python main.py --mode correct
 
 # Pick a model and write to a named file
-python main.py --mode sliding_window --model kimi-k2 --output run.json
+python main.py --mode sliding_window --model kimi-k3 --output run.json
 
 # Run comparison across all modes (needs API key)
 python main.py --compare

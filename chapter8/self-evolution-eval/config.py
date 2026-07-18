@@ -28,7 +28,7 @@ _PROVIDERS = {
     "moonshot": {
         "key_env": "MOONSHOT_API_KEY",
         "base_url": "https://api.moonshot.cn/v1",
-        "default_model": "kimi-k2-0905-preview",
+        "default_model": "kimi-k3",
     },
     "ark": {
         "key_env": "ARK_API_KEY",

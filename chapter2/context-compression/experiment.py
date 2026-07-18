@@ -291,7 +291,7 @@ def build_parser() -> argparse.ArgumentParser:
                "  python experiment.py                       # 运行全部 6 种策略并对比\n"
                "  python experiment.py -s context_aware      # 只运行“上下文感知压缩”\n"
                "  python experiment.py -s individual combined # 只对比两种非任务感知策略\n"
-               "  python experiment.py --model kimi-k2-0905-preview -o results/k2.json\n"
+               "  python experiment.py --model kimi-k3 -o results/k2.json\n"
                "  python experiment.py --list-strategies     # 查看可选策略名",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

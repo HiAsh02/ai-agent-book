@@ -159,7 +159,7 @@ class ExperimentRunner:
                           num_eval_episodes: int = 10,
                           verbose: bool = True,
                           stochastic: bool = False,
-                          model: str = "kimi-k2-0711-preview") -> Dict[str, Any]:
+                          model: str = "kimi-k3") -> Dict[str, Any]:
         """
         Run experiment with LLM-based in-context learning agent.
         
@@ -396,7 +396,7 @@ class ExperimentRunner:
                            eval_episodes: int = 100,
                            verbose: bool = False,
                            stochastic: bool = False,
-                           model: str = "kimi-k2-0711-preview",
+                           model: str = "kimi-k3",
                            checkpoint_interval: int = 1000,
                            rl_hyperparams: Dict[str, float] = None):
         """
@@ -486,7 +486,7 @@ def main():
         epilog="示例：\n"
                "  python experiment.py --mode qlearning              # 只跑 Q-learning（离线，输出学习曲线）\n"
                "  python experiment.py --mode qlearning --rl-episodes 10000 --seed 42\n"
-               "  python experiment.py --mode both --model kimi-k2-0711-preview  # RL vs LLM 对比\n"
+               "  python experiment.py --mode both --model kimi-k3  # RL vs LLM 对比\n"
                "  python experiment.py --mode llm --llm-episodes 20   # 只跑 LLM 智能体",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -512,8 +512,8 @@ def main():
         help="学习曲线采样间隔：每 N 局记录一次胜率/Q 表规模（默认 1000）"
     )
     parser.add_argument(
-        "--model", type=str, default=os.getenv("MOONSHOT_MODEL", "kimi-k2-0711-preview"),
-        help="LLM 模型名称（Moonshot/Kimi，默认 kimi-k2-0711-preview，可用 MOONSHOT_MODEL 环境变量覆盖）"
+        "--model", type=str, default=os.getenv("MOONSHOT_MODEL", "kimi-k3"),
+        help="LLM 模型名称（Moonshot/Kimi，默认 kimi-k3，可用 MOONSHOT_MODEL 环境变量覆盖）"
     )
     parser.add_argument(
         "--output", type=str, default="results",

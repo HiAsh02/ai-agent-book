@@ -42,7 +42,7 @@ def build_client_and_model(model_override=None):
     elif os.getenv("MOONSHOT_API_KEY"):
         api_key = os.getenv("MOONSHOT_API_KEY")
         base_url = base_url or "https://api.moonshot.cn/v1"
-        model = os.getenv("MODEL", "kimi-k2-0905-preview")
+        model = os.getenv("MODEL", "kimi-k3")
     elif os.getenv("ARK_API_KEY"):
         api_key = os.getenv("ARK_API_KEY")
         base_url = base_url or "https://ark.cn-beijing.volces.com/api/v3"

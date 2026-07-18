@@ -66,7 +66,7 @@ cp env.example .env
 ```
 
 Required API keys:
-- `MOONSHOT_API_KEY`: For the Kimi (Moonshot) model (required). The book's 实验 2-9 uses Kimi K2 (128K window);
+- `MOONSHOT_API_KEY`: For the Kimi (Moonshot) model (required). The book's 实验 2-9 uses Kimi K3 (128K window);
   the model name is configurable via `MODEL_NAME` in `.env` or the `-m/--model` CLI flag (e.g. `kimi-k2.5`, `kimi-k3`, `moonshot-v1-128k`).
 - `SERPER_API_KEY`: For web search (optional, will use mock data if not provided)
 

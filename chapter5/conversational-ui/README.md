@@ -178,7 +178,7 @@ r=agent.customize(c,m,pathlib.Path('frontend'),'把发送按钮改成橙色'); \
 - **换模型 / 换供应商**：Agent 走标准 OpenAI SDK，任何"兼容 OpenAI 协议"的服务都能接。
   只需在 `.env` 或环境变量里设置 `OPENAI_BASE_URL` + `MODEL` + 对应的 `OPENAI_API_KEY`，
   代码无需改动。例如：
-  - Kimi / Moonshot：`OPENAI_BASE_URL=https://api.moonshot.cn/v1`、`MODEL=kimi-k2-...`；
+  - Kimi / Moonshot：`OPENAI_BASE_URL=https://api.moonshot.cn/v1`、`MODEL=kimi-k3`；
   - 火山方舟(ARK)：`OPENAI_BASE_URL=https://ark.cn-beijing.volces.com/api/v3`、`MODEL=<endpoint-id>`；
   - 本地 vLLM / Ollama 等：把 `OPENAI_BASE_URL` 指向本地端点即可。
 - **扩展可定制范围**：默认只允许改 `src/App.jsx`、`src/theme.css`。想让 Agent 能改更多文件，

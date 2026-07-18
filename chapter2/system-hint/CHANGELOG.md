@@ -45,7 +45,7 @@ Verified and ensured real system time is used throughout:
   "timestamp": "2025-09-30T20:26:32.057323",
   "iteration": 1,
   "provider": "kimi",
-  "model": "kimi-k2-0905-preview",
+  "model": "kimi-k3",
   "conversation_history": [
     {"role": "system", "content": "..."},
     {"role": "user", "content": "[2025-09-30 20:26:00] Task..."},

@@ -448,7 +448,7 @@ def main():
                "  python main.py --mode correct                  # 运行单个策略\n"
                "  python main.py --compare                       # 一次跑完所有策略并打印对比表\n"
                "  python main.py --report                        # 离线：读取已有 result_*.json 打印对比表（无需 API Key）\n"
-               "  python main.py --mode sliding_window --model kimi-k2 --output run.json\n"
+               "  python main.py --mode sliding_window --model kimi-k3 --output run.json\n"
                "\n可选策略（--mode）：correct, dynamic_system, shuffled_tools,\n"
                "                      dynamic_profile, sliding_window, text_format",
         formatter_class=argparse.RawDescriptionHelpFormatter,

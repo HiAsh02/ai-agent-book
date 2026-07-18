@@ -86,7 +86,7 @@ python main.py --mode sample
 python main.py --mode single --task "Create a hello world Python script"
 
 # Override provider / model, and choose the trajectory output file
-python main.py --mode single --task "..." --provider kimi --model kimi-k2-0905-preview --output run1.json
+python main.py --mode single --task "..." --provider kimi --model kimi-k3 --output run1.json
 
 # Run demonstrations
 python main.py --mode demo --demo basic

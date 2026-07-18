@@ -368,7 +368,7 @@ def build_parser() -> argparse.ArgumentParser:
         epilog="示例：\n"
                "  python run_all_strategies.py                     # 运行全部 6 种策略\n"
                "  python run_all_strategies.py -s windowed         # 只跑自适应窗口化策略\n"
-               "  python run_all_strategies.py --model kimi-k2-0905-preview --log-dir logs/k2\n"
+               "  python run_all_strategies.py --model kimi-k3 --log-dir logs/k2\n"
                "  python run_all_strategies.py --list-strategies",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
