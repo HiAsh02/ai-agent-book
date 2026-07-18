@@ -276,12 +276,24 @@ class StagedAgent:
         阶段转换工具会切换 self.stage 并立刻返回，让下一轮用新提示词+新工具。
         """
         messages = [{"role": "system", "content": STAGE_PROMPTS[self.stage]}] + self.history
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            tools=STAGE_TOOLS[self.stage],
-            temperature=Config.TEMPERATURE,
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                tools=STAGE_TOOLS[self.stage],
+                temperature=Config.TEMPERATURE,
+            )
+        except Exception as exc:  # noqa: BLE001
+            # 部分推理模型（如 gpt-5.x）只接受默认温度，显式传 temperature 会 400。
+            # 识别到与温度相关的报错时，去掉 temperature 重试一次。
+            if "temperature" in str(exc).lower():
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    tools=STAGE_TOOLS[self.stage],
+                )
+            else:
+                raise
         msg = response.choices[0].message
 
         # 把助手消息（可能含 tool_calls）加入共享历史
