@@ -1,60 +1,60 @@
 """
-配置模块：集中读取环境变量。
+Configuration module: centrally read environment variables.
 
-实验 10-1 使用 OpenAI 官方 SDK，所有可调项都通过环境变量注入，
-方便切换到兼容 OpenAI 协议的其他厂商（Kimi / Doubao 等）。
+Experiment 10-1 uses the OpenAI official SDK; all adjustable items are injected via environment variables,
+making it easy to switch to other vendors compatible with the OpenAI protocol (Kimi / Doubao, etc.).
 """
 
 import os
 
 try:
-    # 允许把配置写在 .env 里（可选依赖）
+    # Allow writing configuration in .env (optional dependency)
     from dotenv import load_dotenv
 
     load_dotenv()
-except Exception:  # pragma: no cover - dotenv 不是硬性依赖
+except Exception:  # pragma: no cover - dotenv is not a hard dependency
     pass
 
 
 def _to_openrouter_model(model: str) -> str:
-    """把模型名映射到 OpenRouter 命名空间（用于无 OPENAI_API_KEY 的回退路径）。"""
+    """Map model names to the OpenRouter namespace (for fallback paths without OPENAI_API_KEY)."""
     if "/" in model:
-        return model                      # 已是 OpenRouter 命名空间，原样使用
+        return model                      # Already in OpenRouter namespace, use as-is
     if model.startswith("gpt-"):
         return "openai/" + model          # gpt-* -> openai/gpt-*
     if model.startswith("claude-"):
         return "anthropic/claude-opus-4.8"
-    return "openai/gpt-5.6-luna"          # 兜底：当前便宜旗舰
+    return "openai/gpt-5.6-luna"          # Fallback: current cheap flagship
 
 
 class Config:
-    """运行时配置。"""
+    """Runtime configuration."""
 
-    # 必填：OpenAI API Key（本实验默认用 OPENAI_API_KEY）
+    # Required: OpenAI API Key (this experiment defaults to OPENAI_API_KEY)
     API_KEY: str = os.environ.get("OPENAI_API_KEY", "")
 
-    # 可选：兼容 OpenAI 协议的 base_url，默认官方地址
+    # Optional: base_url compatible with OpenAI protocol, defaults to official address
     BASE_URL: str = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
-    # 可选：模型名，默认用当前便宜旗舰 gpt-5.6-luna 控制演示成本
+    # Optional: model name, defaults to current cheap flagship gpt-5.6-luna to control demo cost
     MODEL: str = os.environ.get("OPENAI_MODEL", "gpt-5.6-luna")
 
-    # 采样温度，稍低一些让行为更稳定可复现
+    # Sampling temperature, slightly lower for more stable and reproducible behavior
     TEMPERATURE: float = float(os.environ.get("OPENAI_TEMPERATURE", "0.3"))
 
     @classmethod
     def validate(cls) -> None:
-        """校验并按需应用通用回退。
+        """Validate and apply general fallback as needed.
 
-        0) gpt-5.x 系列直连 OpenAI 需组织验证（且这类推理模型只接受默认温度），
-           因此只要设置了 OPENROUTER_API_KEY，即便同时有 OPENAI_API_KEY，也优先走
-           OpenRouter，省去组织验证的麻烦；
-        1) 否则有 OPENAI_API_KEY -> 直连 OpenAI（尊重 OPENAI_BASE_URL）；
-        2) 否则有 OPENROUTER_API_KEY -> 改走 OpenRouter，并映射模型名；
-        3) 都没有则报清晰错误。
+        0) gpt-5.x series connecting directly to OpenAI requires organization verification (and these reasoning models only accept default temperature),
+           so if OPENROUTER_API_KEY is set, even if OPENAI_API_KEY is also present, prioritize
+           OpenRouter to avoid organization verification hassle;
+        1) Otherwise, if OPENAI_API_KEY is set -> connect directly to OpenAI (respect OPENAI_BASE_URL);
+        2) Otherwise, if OPENROUTER_API_KEY is set -> switch to OpenRouter and map model name;
+        3) If neither is set, report a clear error.
         """
         or_key = os.environ.get("OPENROUTER_API_KEY", "")
-        # gpt-5.x（含 gpt-5.6-luna 等推理旗舰）优先走 OpenRouter，规避组织验证。
+        # gpt-5.x (including gpt-5.6-luna and other reasoning flagships) prioritize OpenRouter to avoid organization verification.
         needs_openrouter = cls.MODEL.startswith("gpt-5") and "/" not in cls.MODEL
         if or_key and (needs_openrouter or not cls.API_KEY):
             cls.API_KEY = or_key
@@ -64,7 +64,7 @@ class Config:
         if cls.API_KEY:
             return
         raise SystemExit(
-            "错误：未检测到 OPENAI_API_KEY 或 OPENROUTER_API_KEY 环境变量。\n"
-            "请先 `export OPENAI_API_KEY=...`（或 OPENROUTER_API_KEY），"
-            "或复制 env.example 为 .env 并填写。"
+            "Error: No OPENAI_API_KEY or OPENROUTER_API_KEY environment variable detected.\n"
+            "Please `export OPENAI_API_KEY=...` (or OPENROUTER_API_KEY),"
+            "or copy env.example to .env and fill it in."
         )

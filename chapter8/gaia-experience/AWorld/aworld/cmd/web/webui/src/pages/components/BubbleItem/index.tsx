@@ -15,10 +15,10 @@ interface BubbleItemProps {
 }
 
 const BubbleItem: React.FC<BubbleItemProps> = ({ sessionId, data, onOpenWorkspace, isLoading = false }) => {
-  // 用于记录上次打开的workspace数据，避免重复调用
+  // Used to record the last opened workspace data to avoid repeated calls
   const lastWorkspaceDataRef = useRef<ToolCardData | null>(null);
 
-  // 修改openWorkspace函数，直接调用外部回调
+  // Modify the openWorkspace function to directly call the external callback
   const openWorkspace = (data: ToolCardData) => {
     if (onOpenWorkspace) {
       onOpenWorkspace(data);
@@ -27,12 +27,12 @@ const BubbleItem: React.FC<BubbleItemProps> = ({ sessionId, data, onOpenWorkspac
 
   const { segments } = extractToolCards(data);
 
-  // 比较两个workspace数据是否相同
+  // Compare whether two workspace data are the same
   const isWorkspaceDataEqual = (data1: ToolCardData | null, data2: ToolCardData | null): boolean => {
     if (!data1 && !data2) return true;
     if (!data1 || !data2) return false;
 
-    // 比较关键字段来判断是否为同一个workspace
+    // Compare key fields to determine if it is the same workspace
     return (
       data1.tool_call_id === data2.tool_call_id &&
       data1.artifacts?.length === data2.artifacts?.length &&
@@ -40,17 +40,17 @@ const BubbleItem: React.FC<BubbleItemProps> = ({ sessionId, data, onOpenWorkspac
     );
   };
 
-  // 自动打开workspace的逻辑 - 只在流式输出过程中自动打开
+  // Logic for automatically opening workspace - only during streaming output
   useEffect(() => {
-    // 只有在流式输出过程中才自动打开workspace
+    // Only automatically open workspace during streaming output
     if (!isLoading) {
       return;
     }
 
-    // 查找最新的具有workspace功能的tool_card（不区分card类型）
+    // Find the latest tool_card with workspace functionality (without distinguishing card type)
     const toolCardSegments = segments.filter(segment => segment.type === 'tool_card');
 
-    // 从最后一个开始查找，找到第一个有artifacts的tool_card
+    // Search from the last one to find the first tool_card with artifacts
     const latestWorkspaceCard = toolCardSegments
       .slice()
       .reverse()
@@ -62,12 +62,12 @@ const BubbleItem: React.FC<BubbleItemProps> = ({ sessionId, data, onOpenWorkspac
     if (latestWorkspaceCard && latestWorkspaceCard.type === 'tool_card' && onOpenWorkspace) {
       const currentWorkspaceData = latestWorkspaceCard.data;
 
-      // 检查当前workspace数据是否与上次相同
+      // Check if the current workspace data is the same as the last one
       if (!isWorkspaceDataEqual(lastWorkspaceDataRef.current, currentWorkspaceData)) {
-        // 更新记录的workspace数据
+        // Update the recorded workspace data
         lastWorkspaceDataRef.current = currentWorkspaceData;
 
-        // 使用requestAnimationFrame确保在下一帧渲染后打开workspace
+        // Use requestAnimationFrame to ensure opening workspace after the next frame render
         const frameId = requestAnimationFrame(() => {
           openWorkspace(currentWorkspaceData);
         });
@@ -98,7 +98,7 @@ const BubbleItem: React.FC<BubbleItemProps> = ({ sessionId, data, onOpenWorkspac
           }
         }
       })}
-      {/* 移除内部的Drawer */}
+      {/* Remove the internal Drawer */}
     </div>
   );
 };

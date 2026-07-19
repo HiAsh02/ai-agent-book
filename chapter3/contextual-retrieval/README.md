@@ -8,58 +8,49 @@ An educational implementation of Anthropic's Contextual Retrieval technique, dem
 
 **The Solution**: Contextual Retrieval prepends chunk-specific explanatory context to each chunk before embedding and indexing, preserving semantic meaning.
 
-## 📊 核心实验：离线量化召回提升（实验 3-11）
+## 📊 Core Experiment: Offline Quantification of Retrieval Improvement (Experiment 3-11)
 
-上面的 Key Insight 是本项目要验证的核心主张。`compare_retrieval.py` 用一组
-可控的对比实验**完全离线**地量化它：把同一批文本块分别以两种方式建 BM25 索引——
-无上下文（只索引原始文本）与有上下文（索引 LLM 生成的前缀 + 原始文本）——
-再在评测集 `evaluation/retrieval_eval.json`（15 条查询 + 人工标注 gold 文本块）
-上比较 `recall@k`（命中率）。**无需任何 API 或检索服务**（BM25 + jieba 分词）。
+The Key Insight above is the core claim this project aims to validate. `compare_retrieval.py` uses a set of controlled comparative experiments to **fully offline** quantify it: it builds BM25 indexes for the same set of text chunks in two ways — without context (indexing only the raw text) and with context (indexing the LLM-generated prefix + raw text) — then compares `recall@k` (hit rate) on the evaluation set `evaluation/retrieval_eval.json` (15 queries + human-annotated gold text chunks). **No API or retrieval service required** (BM25 + jieba tokenization).
 
 ```bash
-# 跑完整对比表（默认语料 document_store.json，默认评测集）
+# Run the full comparison table (default corpus document_store.json, default evaluation set)
 python compare_retrieval.py
 
-# 查看每条查询的命中排名明细
+# View hit ranking details for each query
 python compare_retrieval.py --per-query
 
-# 临时单条查询：并排看无上下文 / 有上下文的 Top-K 结果
-python compare_retrieval.py --query "国家主席有哪些职权？" --top-k 5
+# Ad-hoc single query: side-by-side Top-K results without / with context
+python compare_retrieval.py --query "What are the powers of the President?" --top-k 5
 
-# 只看无上下文基线 / 另存机器可读结果
+# View only the plain baseline / save machine-readable results
 python compare_retrieval.py --mode plain
 python compare_retrieval.py --output result.json
 
-# 中文 --help
+# Chinese --help
 python compare_retrieval.py --help
 ```
 
-真实运行输出（22 个《宪法》《检察官法》文本块，15 条查询，jieba 分词）：
+Actual run output (22 text chunks from the Constitution and the Public Prosecutors Law, 15 queries, jieba tokenization):
 
 ```
-检索召回对比：无上下文分块  vs.  上下文感知检索（BM25）
+Retrieval Recall Comparison: Plain Chunking  vs.  Context-Aware Retrieval (BM25)
 ====================================================================
-方法                  recall@1    recall@3    recall@5
+Method                 recall@1    recall@3    recall@5
 ----------------------------------------------------
-无上下文 (plain)          60.0%      86.7%      93.3%
-有上下文 (ctx)            86.7%      86.7%      93.3%
+Plain (no context)          60.0%      86.7%      93.3%
+Contextual (ctx)            86.7%      86.7%      93.3%
 ----------------------------------------------------
-提升 (Δpp)             +26.7pp      +0.0pp      +0.0pp
+Improvement (Δpp)        +26.7pp      +0.0pp      +0.0pp
 ----------------------------------------------------
-失败率下降                    67%          0%          0%
+Failure rate reduction          67%          0%          0%
 ```
 
-结论与书中一致：为文本块补上上下文前缀显著提升 top-1 召回（60% → 86.7%，
-失败率 1−recall@1 下降 67%），前缀为 BM25 注入了“身份标签”式的可匹配关键词。
-这一提升在 recall@1 上最明显；`--query` 模式可直观看到前缀如何把“正确所属章节”
-的文本块重新排到前面。
+Conclusion consistent with the book: prepending a contextual prefix to text chunks significantly improves top-1 recall (60% → 86.7%, failure rate 1−recall@1 drops by 67%), as the prefix injects "identity tag"-like matchable keywords into BM25. This improvement is most pronounced at recall@1; the `--query` mode lets you intuitively see how the prefix re-ranks the text chunk belonging to the correct chapter to the top.
 
-> `--method embedding` / `--method hybrid`（上下文向量嵌入 + RRF 融合）需要
-> 调用 embedding API，无法离线运行；脚本会给出提示并回退到 BM25 离线结果。
-> 稠密检索 + 重排序的完整实现见 `contextual_tools.py`。
+> `--method embedding` / `--method hybrid` (contextual vector embeddings + RRF fusion) require calling an embedding API and cannot run offline; the script will prompt and fall back to BM25 offline results.
+> The full implementation of dense retrieval + reranking is in `contextual_tools.py`.
 
-同一对比逻辑也内建在 `ContextualChunker.compare_retrieval_methods()` 中（书中
-`compare_retrieval_methods` 功能），可对任意一组 `ContextualChunk` 直接做并排检索对比。
+The same comparison logic is also built into `ContextualChunker.compare_retrieval_methods()` (the `compare_retrieval_methods` functionality in the book), allowing side-by-side retrieval comparison directly on any set of `ContextualChunk` objects.
 
 ## 📚 Educational Features
 
@@ -159,10 +150,10 @@ python index_local_laws_contextual.py --no-contextual
 python main.py
 
 # Query with specific mode
-python main.py --query "宪法第一条是什么" --mode agentic
+python main.py --query "What is Article 1 of the Constitution?" --mode agentic
 
 # Compare agentic vs non-agentic modes
-python main.py --query "宪法第一条是什么" --mode compare
+python main.py --query "What is Article 1 of the Constitution?" --mode compare
 ```
 
 ## Context Generation Process
@@ -193,8 +184,7 @@ Please give a short, succinct context to situate this chunk within the overall d
 
 ## 🤝 Contributing
 
-This is an educational implementation. Contributions welcome for:
-- Additional chunking strategies
+This is an educational implementation. Contributions welcome for:- Additional chunking strategies
 - Alternative context generation prompts
 - Performance optimizations
 - Evaluation metrics
@@ -208,7 +198,7 @@ Educational project for learning purposes.
 
 Based on research by Anthropic's engineering team on improving RAG retrieval accuracy through contextual enhancement.
 
-## OpenRouter 通用回退 / Universal OpenRouter fallback
+## OpenRouter Universal Fallback
 
 This experiment now supports a **universal OpenRouter fallback** for its chat LLM.
 

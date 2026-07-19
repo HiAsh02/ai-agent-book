@@ -18,8 +18,8 @@ from typing import Optional
 
 from tqdm.asyncio import tqdm_asyncio
 
-# 注意：vllm / SamplingParams 在 generate_distillation_data() 内部按需导入，
-# 这样即便未安装 vllm（如离线查看 --help 时）也能正常展示命令行帮助。
+#  Note: vllm / SamplingParams are imported on demand inside generate_distillation_data(), 
+#  so that command-line help can be displayed normally even if vllm is not installed (e.g., when viewing --help offline).
 
 LANGUAGE_CLASSIFICATION_PROMPT = """You are a precise language classifier.
 
@@ -359,50 +359,50 @@ async def generate_distillation_data(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="用教师模型（长提示 + 思考）生成 Prompt 蒸馏训练数据",
+        description="Generate prompt distillation training data using a teacher model (long prompt + thinking)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--input_file",
         type=str,
         default="./example-data/multilingual.txt",
-        help="输入文本文件路径（每行一句待分类文本）",
+        help="Input text file path (one sentence per line to classify)",
     )
     parser.add_argument(
         "--output_file",
         type=str,
         default="./data/prompt_distillation_lang.jsonl",
-        help="生成的训练数据保存路径（JSONL 格式）",
+        help="Path to save generated training data (JSONL format)",
     )
     parser.add_argument(
         "--model_name",
         type=str,
         default="Qwen/Qwen3-30B-A3B-Thinking-2507",
-        help="教师模型名称（用思考型模型以获得更高准确率）",
+        help="Teacher model name (use a thinking model for higher accuracy)",
     )
     parser.add_argument(
         "--temperature",
         type=float,
         default=0.15,
-        help="采样温度（与 tinker 保持一致，取 0.15）",
+        help="Sampling temperature (consistent with tinker, set to 0.15)",
     )
     parser.add_argument(
         "--max_tokens",
         type=int,
         default=4096,
-        help="单条生成的最大 token 数",
+        help="Maximum number of tokens generated per single request",
     )
     parser.add_argument(
         "--tensor_parallel_size",
         type=int,
         default=1,
-        help="张量并行使用的 GPU 数（30B 模型在 H100 上建议 2-4）",
+        help="Number of GPUs used for tensor parallelism (recommended 2-4 for 30B model on H100)",
     )
     parser.add_argument(
         "--max_retries",
         type=int,
         default=3,
-        help="失败样本的最大重试次数",
+        help="Maximum retry count for failed samples",
     )
     
     args = parser.parse_args()

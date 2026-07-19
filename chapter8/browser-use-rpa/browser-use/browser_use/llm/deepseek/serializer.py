@@ -19,7 +19,7 @@ MessageDict = dict[str, Any]
 class DeepSeekMessageSerializer:
 	"""Serializer for converting browser-use messages to DeepSeek messages."""
 
-	# -------- content 处理 --------------------------------------------------
+	# -------- content processing --------------------------------------------------
 	@staticmethod
 	def _serialize_text_part(part: ContentPartTextParam) -> str:
 		return part.text
@@ -47,7 +47,7 @@ class DeepSeekMessageSerializer:
 				serialized.append({'type': 'text', 'text': f'[Refusal] {part.refusal}'})
 		return serialized
 
-	# -------- Tool-call 处理 -------------------------------------------------
+	# -------- Tool-call processing -------------------------------------------------
 	@staticmethod
 	def _serialize_tool_calls(tool_calls: list[ToolCall]) -> list[dict[str, Any]]:
 		deepseek_tool_calls: list[dict[str, Any]] = []
@@ -68,7 +68,7 @@ class DeepSeekMessageSerializer:
 			)
 		return deepseek_tool_calls
 
-	# -------- 单条消息序列化 -------------------------------------------------
+	# -------- Single message serialization -------------------------------------------------
 	@overload
 	@staticmethod
 	def serialize(message: UserMessage) -> MessageDict: ...
@@ -103,7 +103,7 @@ class DeepSeekMessageSerializer:
 			return msg
 		raise ValueError(f'Unknown message type: {type(message)}')
 
-	# -------- 列表序列化 -----------------------------------------------------
+	# -------- List serialization -----------------------------------------------------
 	@staticmethod
 	def serialize_messages(messages: list[BaseMessage]) -> list[MessageDict]:
 		return [DeepSeekMessageSerializer.serialize(m) for m in messages]

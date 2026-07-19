@@ -66,7 +66,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({ node, onUpdate }) => {
 
       <Collapse defaultActiveKey={['input']} bordered={false} className="node-editor-collapse">
         <Collapse.Panel
-          header="输入"
+          header="Input"
           key="input"
           extra={
             <Button
@@ -96,7 +96,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({ node, onUpdate }) => {
             columns={useMemo<Array<ColumnType<NodeIOItem>>>(
               () => [
                 {
-                  title: '变量名',
+                  title: 'Variable Name',
                   dataIndex: 'label',
                   render: (text: string, _: NodeIOItem, index: number) => (
                     <Input
@@ -108,7 +108,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({ node, onUpdate }) => {
                   )
                 },
                 {
-                  title: '变量值',
+                  title: 'Variable Value',
                   dataIndex: 'type',
                   render: (text: string, _: NodeIOItem, index: number) => (
                     <Select
@@ -157,7 +157,7 @@ export const NodeEditor: React.FC<NodeEditorProps> = ({ node, onUpdate }) => {
         </Collapse.Panel>
       </Collapse>
       <Collapse defaultActiveKey={['output']} bordered={false} className="node-editor-collapse">
-        <Collapse.Panel header="输出" key="output">
+        <Collapse.Panel header="Output" key="output">
           <Input.TextArea
             value={editingContent || ''}
             onChange={(e) => {

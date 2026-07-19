@@ -1,17 +1,17 @@
-"""Flux 异步 Agent 运行时（实验 4-5 核心）。
+"""Flux async Agent runtime (experiment 4-5 core).
 
-实现设计文档第 5 节的事件处理循环，重点覆盖实验 4-5 的四个能力：
-  1. 异步工具执行：run_terminal_command 立即返回占位符，任务在后台跑。
-  2. 事件队列与批量处理：非紧急事件进 pending，异步结果到达时一次性批量追加。
-  3. 打断机制：用户"取消/停止"立即取消当前 turn + 所有异步工具，并留痕。
-  4. 并行工具的取消与状态查询：query_task / cancel_task 按 ID 操作；
-     异步完成后以"新事件"把真实结果注入对话。
+Implements the event processing loop from Section 5 of the design document, focusing on the four capabilities of experiments 4-5:
+  1. Async tool execution: run_terminal_command immediately returns a placeholder, the task runs in the background.
+  2. Event queue and batch processing: non-urgent events go to pending, and when async results arrive, they are appended in one batch.
+  3. Interruption mechanism: user "cancel/stop" immediately cancels the current turn + all async tools, and leaves a trace.
+  4. Cancellation and status query for parallel tools: query_task / cancel_task operate by ID;
+     after async completion, inject the real result into the conversation as a "new event".
 
-架构（三个协程协作，全部基于 asyncio 单线程）：
-  - inbox 队列：所有进来的事件（用户输入、打断、异步完成通知）先入 inbox。
-  - _dispatcher：从 inbox 取事件 -> 判定紧急度 -> 分流（立即处理 / 排队 / 打断）。
-  - _worker   ：从 work 队列取"事件批次" -> 追加到轨迹 -> 跑一轮 LLM（run_llm_turn）。
-    每一轮 LLM 作为可取消的子任务（turn_task），打断时直接 cancel 它。
+Architecture (three coroutines cooperating, all based on asyncio single-thread):
+  - inbox queue: all incoming events (user input, interruption, async completion notification) first enter inbox.
+  - _dispatcher: takes events from inbox -> determines urgency -> routes (immediate processing / queuing / interruption).
+  - _worker: takes "event batches" from work queue -> appends to trace -> runs one LLM turn (run_llm_turn).
+    Each LLM turn is a cancellable subtask (turn_task); when interrupted, directly cancel it.
 """
 
 from __future__ import annotations
@@ -25,20 +25,20 @@ from typing import Optional
 from events import Event, EventType, Urgency, classify_urgency
 from tasks import TaskManager, TaskState
 
-# ------------------------- LLM 工具定义（function calling） -------------------------
+# ------------------------- LLM tool definitions (function calling) -------------------------
 
 TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
             "name": "run_terminal_command",
-            "description": ("异步执行一个（模拟的）耗时终端命令，例如日志分析脚本。"
-                            "调用后命令在后台运行，本工具立即返回一个 task_id 占位符，"
-                            "不会阻塞。任务真正完成后，其结果会作为一条新的系统事件出现在对话中。"),
+            "description": ("Execute a (simulated) time-consuming terminal command, e.g., a log analysis script."
+                            "After calling, the command runs in the background; this tool immediately returns a task_id placeholder,"
+                            "and does not block. When the task actually completes, its result will appear in the conversation as a new system event."),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "command": {"type": "string", "description": "要执行的终端命令，如 `python analyze_logs.py`"},
+                    "command": {"type": "string", "description": "The terminal command to execute, e.g., `python analyze_logs.py`"},
                 },
                 "required": ["command"],
             },
@@ -48,7 +48,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "get_current_time",
-            "description": "立即返回当前时间。用于回答用户'现在几点了'之类的即时问题。",
+            "description": "Return the current time immediately. Used to answer instant questions like 'what time is it'.",
             "parameters": {"type": "object", "properties": {}},
         },
     },
@@ -56,10 +56,10 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "query_task",
-            "description": "查询某个后台异步任务的当前进度与状态。",
+            "description": "Query the current progress and status of a background async task.",
             "parameters": {
                 "type": "object",
-                "properties": {"task_id": {"type": "string", "description": "任务 ID，如 T1"}},
+                "properties": {"task_id": {"type": "string", "description": "Task ID, e.g., T1"}},
                 "required": ["task_id"],
             },
         },
@@ -68,36 +68,36 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "cancel_task",
-            "description": "按 task_id 取消一个正在运行的后台异步任务。",
+            "description": "Cancel a running background async task by task_id.",
             "parameters": {
                 "type": "object",
-                "properties": {"task_id": {"type": "string", "description": "任务 ID，如 T1"}},
+                "properties": {"task_id": {"type": "string", "description": "Task ID, e.g., T1"}},
                 "required": ["task_id"],
             },
         },
     },
 ]
 
-SYSTEM_PROMPT = """你是一个异步 Agent（基于 Flux 框架）。你可以调用工具来完成任务。
+SYSTEM_PROMPT = """You are an async Agent (based on the Flux framework). You can call tools to complete tasks.
 
-关键行为准则：
-1. run_terminal_command 是【异步】的：调用后命令在后台运行并立即返回 task_id。
-   你应当简要告知用户"任务已在后台启动"，然后【结束本轮回复，不要空等结果】。
-2. 当你看到形如 "[系统事件｜异步任务完成] task_id=... 结果：..." 的消息时，
-   说明后台任务真的完成了，这时再基于结果给出分析/整合结论。
-3. 如果用户在后台任务运行期间提出简短问题（例如"现在几点了？"），
-   立即用对应工具（如 get_current_time）回答，【不要等待】后台任务。
-4. 你可以用 query_task 查询任意后台任务进度，用 cancel_task 按 ID 取消任务。
-5. 收到 "[用户打断]" 时，立即停止当前工作并简短确认已停止。
-6. 严格按用户给出的计划执行（例如"谁先完成就查其余进度，未过 50% 就取消"）。
-   注意：只取消【进度未超过 50%】的任务；进度已超过 50% 的任务应【保留并等待其完成】，不要取消它。
-   每个还在运行的任务只需查询一次进度即可做出取消/保留决定，不要反复查询。
-7. 回答简洁、用中文，除非用户明确要求其它语言或格式。
+Key behavioral guidelines:
+1. run_terminal_command is [async]: after calling, the command runs in the background and immediately returns a task_id.
+   You should briefly inform the user "the task has been started in the background", then [end this round of reply, do not wait for the result].
+2. When you see a message like "[System event | Async task completed] task_id=... result: ...",
+   it means the background task has actually completed; then provide analysis/integration conclusions based on the result.
+3. If the user asks a short question (e.g., "what time is it?") while a background task is running,
+   immediately answer with the corresponding tool (e.g., get_current_time), [do not wait] for the background task.
+4. You can use query_task to query the progress of any background task, and cancel_task to cancel a task by ID.
+5. When receiving "[User interruption]", immediately stop current work and briefly confirm the stop.
+6. Strictly follow the plan given by the user (e.g., "whoever finishes first, check the progress of the rest; cancel if not past 50%").
+   Note: only cancel tasks whose [progress does not exceed 50%]; tasks whose progress has exceeded 50% should be [kept and waited for completion], do not cancel them.
+   For each running task, query progress only once to decide cancel/keep, do not query repeatedly.
+7. Answer concisely, in Chinese, unless the user explicitly requests another language or format.
 """
 
-MAX_STEPS = 8  # 单轮内最多的工具调用往返次数（防止死循环）
+MAX_STEPS = 8  # Maximum number of tool call round trips in a single turn (to prevent infinite loops)
 
-# 日志配色（各来源一种颜色），供 runtime 与离线演示脚本共用。
+# Log colors (one color per source), shared by runtime and offline demo scripts.
 _LOG_COLORS = {
     "USER": "\033[96m", "AGENT": "\033[92m", "TOOL": "\033[93m",
     "TASK": "\033[95m", "SYSTEM": "\033[90m", "TRAJ": "\033[94m",
@@ -106,7 +106,7 @@ _LOG_COLORS = {
 
 
 def format_log(t0: float, source: str, text: str) -> str:
-    """把一条日志渲染成「[相对秒] 来源 | 文本」的彩色字符串。"""
+    """ Render a log line as a colored string of `[relative seconds] source | text`."""
     color = _LOG_COLORS.get(source, "")
     reset = "\033[0m" if color else ""
     return f"[{time.time() - t0:6.2f}s] {color}{source:6}{reset} | {text}"
@@ -117,67 +117,67 @@ class AgentRuntime:
                  completion_params: Optional[dict] = None):
         self.client = client
         self.model = model
-        # 传给 chat.completions.create 的采样参数。默认 temperature=0.2 适合 gpt-5.6-luna；
-        # 推理模型（如 Moonshot kimi-k3）需要 temperature=1 且 max_tokens>=2048，由 make_client 传入。
+        # Sampling parameters passed to chat.completions.create. Default temperature=0.2 suitable for gpt-5.6-luna;
+        # reasoning models (e.g., Moonshot kimi-k3) need temperature=1 and max_tokens>=2048, passed by make_client.
         self.completion_params = completion_params or {"temperature": 0.2}
         self._t0 = start_time or time.time()
 
-        self.trajectory: list[Event] = []          # 轨迹（工作记忆）
-        self.inbox: asyncio.Queue = asyncio.Queue()  # 所有进来的原始事件
-        self.work: asyncio.Queue = asyncio.Queue()   # 待处理的事件批次
-        self.pending: list[Event] = []               # 非紧急事件的排队缓冲
+        self.trajectory: list[Event] = []          # Trace (working memory)
+        self.inbox: asyncio.Queue = asyncio.Queue()  # All incoming raw events
+        self.work: asyncio.Queue = asyncio.Queue()   # Event batches to be processed
+        self.pending: list[Event] = []               # Queue buffer for non-urgent events
 
         self.tasks = TaskManager(on_complete=self._on_task_complete, log=self.log)
         self.turn_task: Optional[asyncio.Task] = None
         self.running = True
         self._STOP = object()
 
-    # ------------------------------- 日志 -------------------------------
+    # ------------------------------- Logging -------------------------------
 
     def log(self, source: str, text: str) -> None:
         print(format_log(self._t0, source, text), flush=True)
 
     def _append(self, event: Event) -> None:
-        """把事件追加到轨迹，并打印轨迹留痕。"""
+        """ Append an event to the trace and print the trace for record."""
         self.trajectory.append(event)
         self.log("TRAJ", f"+ {event.type:18} {event.label}")
 
     def build_messages(self) -> list[dict]:
-        """把轨迹渲染成 OpenAI chat 消息列表。"""
+        """ Render the trace as a list of OpenAI chat messages."""
         msgs = [{"role": "system", "content": SYSTEM_PROMPT}]
         for e in self.trajectory:
             if e.message:
                 msgs.append(e.message)
         return msgs
 
-    # ------------------------- 对外接口：提交事件 -------------------------
+    # ------------------------- External interface: submit event -------------------------
 
     async def submit_user_message(self, text: str, urgency: Optional[str] = None) -> None:
-        """提交一条用户消息（demo 用它模拟用户输入）。"""
+        """ Submit a user message (demo uses this to simulate user input)."""
         u = urgency or classify_urgency(text)
         if u == Urgency.INTERRUPT:
             ev = Event(EventType.USER_INTERRUPT, urgency=u,
-                       message={"role": "user", "content": f"[用户打断] {text}"},
-                       label=f"用户打断：{text}")
+                       message={"role": "user", "content": f"[User interruption] {text}"},
+                       label=f"User interruption:{text}")
         else:
             ev = Event(EventType.USER_INPUT, urgency=u,
                        message={"role": "user", "content": text},
-                       label=f"用户消息（{u}）：{text}")
+                       label=f"User message ({u}）：{text}")
         self.log("USER", f"({u}) {text}")
         await self.inbox.put(ev)
 
     async def _on_task_complete(self, state: TaskState) -> None:
-        """异步任务自然完成 -> 把真实结果作为【新事件】注入 inbox。"""
+        """ Async task naturally completes -> inject the real result as a [new event] into the inbox."""
         ev = Event(
             EventType.ASYNC_RESULT, task_id=state.task_id,
             message={"role": "user",
-                     "content": (f"[系统事件｜异步任务完成] task_id={state.task_id} "
-                                 f"命令=`{state.command}` 结果：{state.result}")},
-            label=f"异步完成 {state.task_id}",
+                     "content": (f"[System event | Async task completed] task_id={state.task_id} "
+                                 f"command=`{state.command}` result:{state.result}")},
+            label=f"async complete {state.task_id}",
         )
         await self.inbox.put(ev)
 
-    # ------------------------------- 主循环 -------------------------------
+    # ------------------------------- Main Loop -------------------------------
 
     async def serve(self) -> None:
         dispatcher = asyncio.create_task(self._dispatcher())
@@ -195,7 +195,7 @@ class AgentRuntime:
         return drained
 
     async def _dispatcher(self) -> None:
-        """事件分流：实现设计文档 5.1 的两种处理机制。"""
+        """Event dispatch: implement the two processing mechanisms from design document 5.1."""
         while self.running:
             ev = await self.inbox.get()
             if ev is self._STOP:
@@ -203,47 +203,47 @@ class AgentRuntime:
                 break
 
             if ev.type == EventType.USER_INTERRUPT:
-                # —— 取消式处理：立刻打断当前 turn + 取消所有异步工具 ——
+                # —— Cancellation mode: immediately interrupt current turn + cancel all async tools ——
                 await self._handle_interrupt(ev)
 
             elif ev.type == EventType.ASYNC_RESULT:
-                # —— 异步结果到达：批量把 pending 一并追加，再触发 LLM ——
+                # —— Async result arrival: batch append all pending events, then trigger LLM ——
                 batch = [ev] + self._drain_pending()
                 if len(batch) > 1:
-                    self.log("SYSTEM", f"异步结果到达，批量处理 {len(batch)-1} 条积压的非紧急事件")
+                    self.log("SYSTEM", f"Async result arrived, batch processing {len(batch)-1} backlogged non-urgent events")
                 await self.work.put(batch)
 
             elif ev.type == EventType.USER_INPUT:
                 if ev.urgency == Urgency.IMMEDIATE:
-                    # 立即处理（如用户提问），不打断后台异步任务
+                    # Process immediately (e.g., user questions), without interrupting background async tasks
                     await self.work.put([ev])
                 elif self._is_idle():
-                    # 空闲时，普通指令也直接处理（例如一开始下达的任务）
+                    # During idle, normal commands are also processed directly (e.g., tasks issued at start)
                     await self.work.put([ev])
                 else:
-                    # 排队处理：累积到 pending，等下一次异步结果时批量追加
+                    # Queue processing: accumulate to pending, batch append on next async result
                     self.pending.append(ev)
-                    self.log("SYSTEM", f"事件进入排队缓冲（当前积压 {len(self.pending)} 条）")
+                    self.log("SYSTEM", f"Event entering queue buffer (currently backlogged {len(self.pending)} items)")
 
     async def _handle_interrupt(self, ev: Event) -> None:
-        # 1) 取消正在进行的 LLM turn
+        # 1) Cancel ongoing LLM turn
         if self.turn_task and not self.turn_task.done():
             self.turn_task.cancel()
-        # 2) 取消所有后台异步工具
+        # 2) Cancel all background async tools
         cancelled = self.tasks.cancel_all()
-        # 3) 组装打断批次：打断事件 + 系统回执 + 被丢弃的积压事件（留痕）
+        # 3) Assemble interrupt batch: interrupt event + system receipt + discarded backlogged events (for traceability)
         note = Event(
             EventType.SYSTEM_NOTE,
             message={"role": "user",
-                     "content": (f"[系统] 已执行打断：取消了后台任务 {cancelled or '（无）'}。"
-                                 f"请向用户简短确认已停止。")},
-            label=f"打断回执，取消任务 {cancelled or '（无）'}",
+                     "content": (f"[System] Interrupt executed: cancelled background tasks {cancelled or '(none)'}。"
+                                 f"Briefly confirm to the user that it has stopped.")},
+            label=f"Interrupt receipt, cancel task {cancelled or '(none)'}",
         )
         batch = [ev, note] + self._drain_pending()
         await self.work.put(batch)
 
     async def _worker(self) -> None:
-        """逐批处理事件：追加到轨迹后跑一轮可被取消的 LLM。"""
+        """Process events in batches: append to trace then run a cancellable LLM turn."""
         while self.running:
             batch = await self.work.get()
             if batch is self._STOP:
@@ -252,7 +252,7 @@ class AgentRuntime:
             try:
                 await self.turn_task
             except asyncio.CancelledError:
-                self.log("SYSTEM", "当前 LLM turn 已被打断取消")
+                self.log("SYSTEM", "Current LLM turn has been interrupted and cancelled")
 
     async def _process_batch(self, batch: list[Event]) -> None:
         for e in batch:
@@ -262,7 +262,7 @@ class AgentRuntime:
     # ------------------------------- LLM turn -------------------------------
 
     async def run_llm_turn(self) -> None:
-        """调用 LLM 做决策；同步工具就地执行并回填，异步工具启动后回占位符。"""
+        """Call LLM for decision; synchronous tools execute in-place and backfill, async tools start and return placeholders."""
         for _ in range(MAX_STEPS):
             messages = self.build_messages()
             _t = time.time()
@@ -270,7 +270,7 @@ class AgentRuntime:
                 model=self.model, messages=messages,
                 tools=TOOL_SCHEMAS, tool_choice="auto", **self.completion_params,
             )
-            self.log("SYSTEM", f"LLM 调用耗时 {time.time()-_t:.2f}s（{len(messages)} 条消息）")
+            self.log("SYSTEM", f"LLM call took {time.time()-_t:.2f}s（{len(messages)} messages)")
             msg = resp.choices[0].message
 
             assistant_msg: dict = {"role": "assistant", "content": msg.content or ""}
@@ -284,17 +284,17 @@ class AgentRuntime:
             self._append(Event(
                 EventType.AGENT_TOOL_CALL if msg.tool_calls else EventType.AGENT_OUTPUT,
                 message=assistant_msg,
-                label=("调用工具 " + ", ".join(tc.function.name for tc in msg.tool_calls)
-                       if msg.tool_calls else "回复用户"),
+                label=("Call tool " + ", ".join(tc.function.name for tc in msg.tool_calls)
+                       if msg.tool_calls else "Reply to user"),
             ))
 
             if msg.content and msg.content.strip():
                 self.log("AGENT", msg.content.strip())
 
             if not msg.tool_calls:
-                return  # 本轮结束：Agent 给出了最终回复
+                return  # End of turn: Agent gave final reply
 
-            # 执行每个工具调用
+            # Execute each tool call
             for tc in msg.tool_calls:
                 name = tc.function.name
                 try:
@@ -305,46 +305,46 @@ class AgentRuntime:
                 self._append(Event(
                     EventType.TOOL_RESULT,
                     message={"role": "tool", "tool_call_id": tc.id, "content": result_text},
-                    label=f"工具结果 {name}",
+                    label=f"Tool result {name}",
                 ))
 
     def _exec_tool(self, name: str, args: dict) -> str:
-        """执行工具，返回给 LLM 的文本结果。"""
+        """The text result of executing the tool, returned to the LLM."""
         if name == "run_terminal_command":
             command = args.get("command", "")
             state = self.tasks.start(command)
-            return (f"命令已在后台【异步】启动。task_id={state.task_id}，命令=`{command}`。"
-                    f"我不会阻塞等待；任务完成后其结果会以系统事件形式返回。"
-                    f"可用 query_task('{state.task_id}') 查询进度或 cancel_task('{state.task_id}') 取消。")
+            return (f"The command has been started asynchronously in the background. task_id={state.task_id}, command=`{command}`。"
+                    f"I will not block and wait; when the task completes, its result will be returned as a system event."
+                    f"You can use query_task('{state.task_id}') to check progress or cancel_task('{state.task_id}') to cancel.")
 
         if name == "get_current_time":
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.log("TOOL", f"get_current_time -> {now}")
-            return f"当前时间是 {now}。"
+            return f"Current time is {now}。"
 
         if name == "query_task":
             tid = args.get("task_id", "")
             st = self.tasks.query(tid)
             if not st:
-                return f"未找到任务 {tid}。"
+                return f"Task not found {tid}。"
             self.log("TOOL", f"query_task({tid}) -> {st.status} {st.progress:.0f}%")
-            return f"task_id={tid} 命令=`{st.command}` 状态={st.status} 进度={st.progress:.0f}%。"
+            return f"task_id={tid} command=`{st.command}` status={st.status} progress={st.progress:.0f}%。"
 
         if name == "cancel_task":
             tid = args.get("task_id", "")
             st = self.tasks.query(tid)
-            progress = f"{st.progress:.0f}%" if st else "未知"
+            progress = f"{st.progress:.0f}%" if st else "Unknown"
             ok = self.tasks.cancel(tid)
-            self.log("TOOL", f"cancel_task({tid}) -> {'已取消' if ok else '无法取消'} (进度 {progress})")
-            return (f"任务 {tid} 已取消（取消时进度 {progress}）。" if ok
-                    else f"任务 {tid} 无法取消（可能已完成或不存在）。")
+            self.log("TOOL", f"cancel_task({tid}) -> {'Cancelled' if ok else 'Cannot cancel'} (progress {progress})")
+            return (f"Task {tid} cancelled (progress at cancellation {progress}）。" if ok
+                    else f"Task {tid} cannot be cancelled (may have completed or does not exist).")
 
-        return f"未知工具：{name}"
+        return f"Unknown tool: {name}"
 
-    # ------------------------------- 收尾 -------------------------------
+    # ------------------------------- Wrap-up -------------------------------
 
     async def wait_until_idle(self, stable: float = 1.3, timeout: float = 90.0) -> None:
-        """阻塞直到系统持续空闲 stable 秒（或超时）。"""
+        """Block until the system remains idle for stable seconds (or timeout)."""
         start = time.time()
         last_busy = time.time()
         while True:
@@ -357,7 +357,7 @@ class AgentRuntime:
             elif now - last_busy >= stable:
                 return
             if now - start >= timeout:
-                self.log("SYSTEM", "wait_until_idle 超时返回")
+                self.log("SYSTEM", "wait_until_idle timeout returned")
                 return
             await asyncio.sleep(0.1)
 
@@ -365,13 +365,14 @@ class AgentRuntime:
         self.running = False
         await self.inbox.put(self._STOP)
 
-    # ------------------------- 状态检查点（持久化 / 恢复） -------------------------
+    # ------------------------- State Checkpoint (Persist / Restore) -------------------------
 
     def snapshot(self) -> dict:
-        """把 Agent 的可持久化状态导出为一个 JSON 友好的字典。
+        """Export the agent's persistable state as a JSON-friendly dictionary.
 
-        状态 = 轨迹（工作记忆）+ 全部异步任务的最后已知状态。这是「跨会话恢复」
-        的基础：进程重启后，能据此还原对话上下文与后台任务的进度。
+        State = trace (working memory) + last known state of all async tasks. This is the basis for
+        cross-session recovery: after a process restart, the conversation context and background task
+        progress can be restored from this.
         """
         return {
             "model": self.model,
@@ -381,20 +382,20 @@ class AgentRuntime:
         }
 
     def save_checkpoint(self, path: str) -> str:
-        """把当前状态写入检查点文件（JSON），返回文件路径。"""
+        """Write the current state to a checkpoint file (JSON) and return the file path."""
         data = self.snapshot()
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        self.log("STATE", f"已保存检查点 -> {path}"
-                          f"（{len(data['trajectory'])} 条轨迹事件，{len(data['tasks'])} 个任务）")
+        self.log("STATE", f"Checkpoint saved -> {path}"
+                          f"（{len(data['trajectory'])} trace events, {len(data['tasks'])} tasks)")
         return path
 
     def load_checkpoint(self, path: str) -> dict:
-        """从检查点文件恢复轨迹与任务状态（原地覆盖当前状态）。"""
+        """Restore trajectory and task state from checkpoint file (overwrite current state in place)."""
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         self.trajectory = [Event.from_dict(d) for d in data.get("trajectory", [])]
         self.tasks.restore(data.get("tasks", []))
-        self.log("STATE", f"已从检查点恢复 <- {path}"
-                          f"（{len(self.trajectory)} 条轨迹事件，{len(data.get('tasks', []))} 个任务）")
+        self.log("STATE", f"Restored from checkpoint <- {path}"
+                          f"（{len(self.trajectory)} trace events, {len(data.get('tasks', []))} tasks)")
         return data

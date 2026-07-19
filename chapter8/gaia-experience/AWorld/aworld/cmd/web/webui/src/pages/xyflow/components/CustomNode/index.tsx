@@ -95,7 +95,7 @@ export const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
                 items: [
                   {
                     key: 'delete',
-                    label: '删除',
+                    label: 'Delete',
                     icon: <DeleteOutlined />,
                     onClick: (e) => {
                       e.domEvent.stopPropagation();
@@ -104,11 +104,11 @@ export const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
                   },
                   {
                     key: 'duplicate',
-                    label: '创建副本',
+                    label: 'Create Copy',
                     icon: <CopyOutlined />,
                     onClick: (e) => {
                       e.domEvent.stopPropagation();
-                      alert('暂不支持');
+                      alert('Not Supported Yet');
                     }
                   }
                 ]
@@ -126,8 +126,8 @@ export const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
       <div className="custom-node-body">
         <div className="custom-node-content">
           <div>{editingData.content || 'Custom Node Content'}</div>
-          {data.nodeType !== 'end' && renderIO('输入', input)}
-          {data.nodeType !== 'start' && renderIO('输出', output)}
+          {data.nodeType !== 'end' && renderIO('Input', input)}
+          {data.nodeType !== 'start' && renderIO('Output', output)}
         </div>
       </div>
       {data.nodeType !== 'start' && <Handle type="target" position={Position.Left} />}

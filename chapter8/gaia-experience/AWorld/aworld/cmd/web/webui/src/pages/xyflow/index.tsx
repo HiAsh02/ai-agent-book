@@ -31,7 +31,7 @@ function FlowChart() {
   const [showMinimap, setShowMinimap] = useState(false);
   const [isStraightLine, setIsStraightLine] = useState(false);
 
-  // 初始化历史记录
+  // Initialize history
   useEffect(() => {
     initHistory(nodes, edges);
   }, []);
@@ -61,7 +61,7 @@ function FlowChart() {
 
   const handleLoad = useCallback(() => {
     loadFlow(setNodes, setEdges);
-    // 加载后重置历史记录
+    // Reset history after loading
     setTimeout(() => {
       initHistory(nodes, edges);
     }, 0);
@@ -74,7 +74,7 @@ function FlowChart() {
     [edges, setEdges]
   );
 
-  // 自动保存历史记录（带严格防抖）
+  // Auto-save history (with strict debounce)
   const prevNodesRef = useRef<Node[]>([]);
   const prevEdgesRef = useRef<Edge[]>([]);
   useEffect(() => {
@@ -135,7 +135,7 @@ function FlowChart() {
           onUndo={() => {
             const state = onUndo();
             if (state) {
-              // 使用函数式更新确保立即应用状态
+              // Use functional update to ensure immediate state application
               setNodes(() => state.nodes);
               setEdges(() => state.edges);
             }

@@ -7,7 +7,7 @@ export const initialNodes = [
     data: {
       label: 'Start Node',
       nodeType: 'start',
-      content: '开始节点，用于设定工作流启动变量',
+      content: 'Start node, used to set workflow startup variables',
       input: [
         // { label: 'name', type: 'int' },
         // { label: 'age', type: 'Boolean' }
@@ -24,7 +24,7 @@ export const initialNodes = [
     data: {
       label: 'End Node',
       nodeType: 'end',
-      content: '结束节点，用于返回工作流运行结果',
+      content: 'End node, used to return workflow execution results',
       output: [
         // { label: 'name', type: 'int' },
         // { label: 'age', type: 'Boolean' }

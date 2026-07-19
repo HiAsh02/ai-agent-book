@@ -1,15 +1,14 @@
 """
-主动工具发现的核心：用嵌入向量相似度，从 126 个工具里
-按自然语言"能力需求"检索出最相关的 3-5 个候选工具。
+Core of proactive tool discovery: use embedding vector similarity to retrieve the 3–5 most relevant candidate tools from 126 tools based on natural language "capability requirements".
 
-- 工具向量：对每个工具用 "name: description" 生成 embedding，并缓存到本地
-  .cache/tool_embeddings_<embedder>.json，避免每次运行都重新计算。
-- discover_tools(need)：把 need 向量化，与工具向量做余弦相似度，返回 top-k。
+- Tool vectors: generate embeddings for each tool using "name: description" and cache locally in
+  .cache/tool_embeddings_<embedder>.json to avoid recomputation on every run.
+- discover_tools(need): vectorize the need, compute cosine similarity with tool vectors, and return top-k.
 
-嵌入后端是可插拔的（见 `Embedder` 协议）：
-- OpenAIEmbedder：调用 OpenAI embeddings API（默认，联网，效果最好）。
-- 离线模式（--offline）使用 offline_backend.LocalEmbedder（本地哈希词袋，无需 API），
-  用于在没有 key 时验证整条流水线与量化 token/延迟。
+The embedding backend is pluggable (see `Embedder` protocol):
+- OpenAIEmbedder: calls OpenAI embeddings API (default, online, best results).
+- Offline mode (--offline) uses offline_backend.LocalEmbedder (local bag-of-words, no API required),
+  for verifying the entire pipeline and quantifying tokens/latency without a key.
 """
 
 import hashlib
@@ -37,7 +36,7 @@ def _cosine(a: List[float], b: List[float]) -> float:
 
 
 class OpenAIEmbedder:
-    """基于 OpenAI embeddings API 的嵌入后端。"""
+    """Embedding backend based on the OpenAI embeddings API."""
 
     def __init__(self, client, model: str = None):
         self.client = client
@@ -50,11 +49,11 @@ class OpenAIEmbedder:
 
 
 class ToolIndex:
-    """工具向量索引 + 相似度检索。
+    """Tool vector index + similarity retrieval.
 
-    embedder: 具备 `.embed(texts) -> List[vec]` 与 `.name` 的对象；
-              为向后兼容，也可直接传入 OpenAI client（会自动包装为 OpenAIEmbedder）。
-    tools:    参与索引的工具子集，缺省为全部 ALL_TOOLS（配合 --tool-set-size 使用）。
+    embedder: an object with `.embed(texts) -> List[vec]` and `.name`;
+              for backward compatibility, can also be an OpenAI client (automatically wrapped as OpenAIEmbedder).
+    tools:    subset of tools to index; defaults to ALL_TOOLS (used with --tool-set-size).
     """
 
     def __init__(self, embedder, tools: List[Dict] = None):
@@ -85,8 +84,8 @@ class ToolIndex:
                     return cached["vectors"]
             except Exception:
                 pass
-        # 缓存缺失或失效 -> 调用嵌入后端批量生成
-        print(f"[discovery] 正在用 {self.embedder.name} 为 {len(self.texts)} 个工具生成嵌入向量 ...")
+        # Cache missing or invalid -> call embedding backend to batch generate
+        print(f"[discovery] Generating embeddings for {self.embedder.name} tools using {len(self.texts)} ...")
         embeddings = self.embedder.embed(self.texts)
         vectors = {name: vec for name, vec in zip(self.names, embeddings)}
         os.makedirs(_CACHE_DIR, exist_ok=True)
@@ -95,7 +94,7 @@ class ToolIndex:
         return vectors
 
     def search(self, need: str, top_k: int = 4) -> List[Tuple[str, float]]:
-        """返回与 need 最相关的 top_k 个 (工具名, 相似度)。"""
+        """Return top_k (tool name, similarity) most relevant to the need."""
         q = self.embedder.embed([need])[0]
         scored = [(name, _cosine(q, self.vectors[name])) for name in self.names]
         scored.sort(key=lambda x: x[1], reverse=True)

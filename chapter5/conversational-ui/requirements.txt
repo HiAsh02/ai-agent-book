@@ -1,4 +1,4 @@
-# 后端 + Agent/演示脚本依赖
+# Backend + Agent/Demo script dependencies
 fastapi>=0.110
 uvicorn[standard]>=0.27
 openai>=1.30

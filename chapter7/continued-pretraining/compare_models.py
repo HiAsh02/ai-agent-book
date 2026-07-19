@@ -6,8 +6,8 @@ Shows progression from original model to final Korean-capable model
 
 import argparse
 
-# 说明：unsloth / torch 等重型依赖在函数内按需导入，
-# 这样 `python compare_models.py --help` 无需 GPU 环境即可查看参数。
+# Note: heavy dependencies like unsloth / torch are imported on demand within the function,
+# so that `python compare_models.py --help` can view parameters without a GPU environment.
 
 # ANSI color codes for colored output
 class Colors:
@@ -123,22 +123,22 @@ def compare_on_prompt(baseline_model, baseline_tokenizer,
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="对比韩语 Mistral 的三个阶段模型：基础模型 → 继续预训练 → 指令微调。"
-                    "在同一批中韩英提示上并排生成，直观展示韩语能力的提升与英语能力的保留。",
+        description="Compare three stages of Korean Mistral models: base model → continued pretraining → instruction fine-tuning."
+                    "Generate side-by-side on the same batch of Korean-Chinese-English prompts, intuitively showing the improvement in Korean ability and the retention of English ability.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("--base_model", type=str, default="unsloth/mistral-7b-v0.3",
-                        help="基础（未训练）模型名称")
+                        help="Base (untrained) model name")
     parser.add_argument("--pretrained_path", type=str, default="lora_model_pretrained",
-                        help="继续预训练后保存的 LoRA 模型目录")
+                        help="LoRA model directory saved after continued pretraining")
     parser.add_argument("--finetuned_path", type=str, default="lora_model",
-                        help="指令微调后保存的最终 LoRA 模型目录")
+                        help="Final LoRA model directory saved after instruction fine-tuning")
     parser.add_argument("--max_seq_length", type=int, default=2048,
-                        help="最大序列长度")
+                        help="Maximum sequence length")
     parser.add_argument("--max_new_tokens", type=int, default=150,
-                        help="每次生成的最大 token 数")
+                        help="Maximum number of tokens to generate per sample")
     parser.add_argument("--temperature", type=float, default=0.3,
-                        help="采样温度（越低越确定）")
+                        help="Sampling temperature (lower is more deterministic)")
     return parser.parse_args()
 
 

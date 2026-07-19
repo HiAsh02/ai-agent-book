@@ -329,7 +329,7 @@ class ADBController:
         dist: swipe distance ["short", "medium", "long"]
         """
 
-        # 获取元素坐标
+        # Get element coordinates
         x, y = self.__get_element_center(element)
 
         unit_dist = int(self.width / 10)
@@ -503,7 +503,7 @@ class ADBController:
         create_directory_for_file(local)
         success, _ = self.execute_adb(["pull", remote, local])
         if success:
-            self.execute_adb(["shell", "rm", remote])  # 清理临时文件
+            self.execute_adb(["shell", "rm", remote])  # Clean up temporary files
         return success
 
     def get_screen_size(self) -> Optional[Tuple[int, int]]:

@@ -258,7 +258,7 @@ class EmailDemo:
         print(f"\n💾 Results saved to: {self.output_path}")
 
     def _get_llm(self):
-        """Get LLM instance based on configuration (OpenAI 直连，缺 Key 时 OpenRouter 兜底)。"""
+        """Get LLM instance based on configuration (OpenAI direct connection, fallback to OpenRouter when key is missing)."""
         return make_llm(self.llm_model)
 
 
@@ -287,57 +287,57 @@ async def quick_test(model=DEFAULT_MODEL, headless=False, max_steps=15,
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """构建命令行参数解析器（RPA 邮件学习/回放演示）。"""
+    """Build command-line argument parser (RPA email learning/replay demo)."""
     parser = argparse.ArgumentParser(
         prog="demo_email.py",
         description=(
-            "browser-use RPA 演示：学习一次「发送邮件」工作流，之后用不同参数高速回放。\n"
-            "第一阶段（学习）通过多模态大模型逐步探索并录制工作流；\n"
-            "第二阶段（回放）直接复用工作流、无需再调用大模型，对比耗时与调用次数。"
+            "browser-use RPA demo: learn a \"send email\" workflow once, then replay it at high speed with different parameters.\n"
+            "Phase 1 (learning): gradually explore and record the workflow using a multimodal LLM;\n"
+            "Phase 2 (replay): directly reuse the workflow without invoking the LLM again, comparing time and call count."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
-            "示例：\n"
-            "  python demo_email.py                       # 运行完整的「学习→回放」对比演示\n"
-            "  python demo_email.py --quick               # 只跑一次简单任务，快速冒烟测试\n"
+            "Example:\n"
+            "  python demo_email.py                       # Run the full \"learn→replay\" comparison demo\n"
+            "  python demo_email.py --quick               # Run a single simple task for quick smoke test\n"
             "  python demo_email.py --model gemini-2.0-flash-exp --headless\n"
-            "  python demo_email.py --task '给 a@b.com 发主题为\"报告\"的邮件' \\\n"
-            "                       --replay-task '给 c@d.com 发主题为\"周报\"的邮件' \\\n"
+            "  python demo_email.py --task 'Send email with subject \"Report\" to a@b.com' \\\n"
+            "                       --replay-task 'Send email with subject \"Weekly Report\" to c@d.com' \\\n"
             "                       --output results.json\n"
         ),
     )
     parser.add_argument(
         "--task", default=None,
-        help="学习阶段的任务描述（默认：向 test@example.com 发送测试邮件）",
+        help="Task description for the learning phase (default: send a test email to test@example.com)",
     )
     parser.add_argument(
         "--replay-task", default=None,
-        help="回放阶段的任务描述，参数不同但流程相同（默认：向 another@example.com 发送邮件）",
+        help="Task description for the replay phase, same workflow but different parameters (default: send email to another@example.com)",
     )
     parser.add_argument(
         "--model", default=DEFAULT_MODEL,
-        help="使用的大模型，gpt-* 走 OpenAI（缺 Key 时走 OpenRouter 兜底），"
-             "gemini-* 走 Google（默认：gpt-5.6-luna）",
+        help="LLM to use; gpt-* goes through OpenAI (fallback to OpenRouter when key is missing),"
+             "gemini-* goes through Google (default: gpt-5.6-luna)",
     )
     parser.add_argument(
         "--headless", action="store_true",
-        help="以无界面（headless）模式运行浏览器（默认：显示浏览器窗口）",
+        help="Run browser in headless mode (default: show browser window)",
     )
     parser.add_argument(
         "--knowledge-base", default="./email_knowledge", metavar="PATH",
-        help="工作流知识库的存储目录（默认：./email_knowledge）",
+        help="Storage directory for workflow knowledge base (default: ./email_knowledge)",
     )
     parser.add_argument(
         "--max-steps", type=int, default=20, metavar="N",
-        help="学习阶段允许的最大操作步数（默认：20）",
+        help="Maximum number of operation steps allowed in the learning phase (default: 20)",
     )
     parser.add_argument(
         "--output", default=None, metavar="PATH",
-        help="将学习/回放的指标对比与知识库统计写入指定 JSON 文件",
+        help="Write learning/replay metric comparison and knowledge base statistics to a specified JSON file",
     )
     parser.add_argument(
         "--quick", action="store_true",
-        help="快速冒烟测试：只运行一次简单任务，不做学习/回放对比",
+        help="Quick smoke test: run a single simple task without learn/replay comparison",
     )
     return parser
 

@@ -11,10 +11,10 @@ interface Props {
 }
 
 const CardDefault: React.FC<Props> = ({ sessionId, data, onOpenWorkspace }) => {
-  // 当前展开的面板keys
+  // Currently expanded panel keys
   const [activeKeys, setActiveKeys] = useState<string[]>([]);
 
-  // 处理复制
+  // Handle copy
   const handleCopy = useCallback(
     async (panelKey: string) => {
       try {
@@ -27,14 +27,14 @@ const CardDefault: React.FC<Props> = ({ sessionId, data, onOpenWorkspace }) => {
     },
     [data]
   );
-  // 打开workspace
+  // Open workspace
   const handleOpenWorkspace = useCallback(() => {
     if (onOpenWorkspace) {
       onOpenWorkspace(data);
     }
   }, [onOpenWorkspace, sessionId, data]);
 
-  //操作按钮
+  // Action buttons
   const renderExtra = useCallback(
     (panelKey: string) => (
       <Space size="small" onClick={(e) => e.stopPropagation()}>

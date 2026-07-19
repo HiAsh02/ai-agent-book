@@ -346,8 +346,7 @@ This project is part of the AI Agent training curriculum and is intended for edu
 - `week3/agentic-rag`: Original agentic RAG implementation
 - `week3/contextual-retrieval`: Advanced retrieval techniques
 
-
-## OpenRouter 通用回退 / Universal OpenRouter fallback
+## OpenRouter Universal Fallback
 
 This experiment now supports a **universal OpenRouter fallback** for its chat LLM.
 

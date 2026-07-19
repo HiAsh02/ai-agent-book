@@ -39,7 +39,7 @@ type BubbleDataType = {
   trace_id?: string;
 };
 
-// 添加会话数据类型定义
+// Add session data type definition
 type SessionMessage = {
   role: string;
   content: string;
@@ -56,7 +56,7 @@ type SessionData = {
   messages: SessionMessage[];
 };
 
-// 会话列表项类型
+// Session list item type
 type ConversationItem = {
   key: string;
   label: string;
@@ -77,7 +77,7 @@ const useStyle = createStyles(({ token, css }) => {
       background: ${token.colorBgContainer};
       font-family: AlibabaPuHuiTi, ${token.fontFamily}, sans-serif;
     `,
-    // sider 样式
+    // sider style
     sider: css`
       background: ${token.colorBgLayout}80;
       width: 280px;
@@ -192,7 +192,7 @@ const useStyle = createStyles(({ token, css }) => {
       align-items: center;
       justify-content: space-between;
     `,
-    // chat list 样式
+    // chat list style
     chat: css`
       height: 100%;
       width: 100%;
@@ -234,7 +234,7 @@ const useStyle = createStyles(({ token, css }) => {
       flex-direction: column;
       justify-content: center;
     `,
-    // sender 样式
+    // sender style
     sender: css`
       width: 100%;
       max-width: 700px;
@@ -294,7 +294,7 @@ const App: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [modelsLoading, setModelsLoading] = useState(false);
 
-  // 右侧侧边栏
+  // Right sidebar
   type SiderContentType = 'TraceXY' | 'Workspace';
   const [rightSiderCollapsed, setRightSiderCollapsed] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('TraceXY');
@@ -302,7 +302,7 @@ const App: React.FC = () => {
   const [traceQuery, setTraceQuery] = useState<string>('');
   const [workspaceData, setWorkspaceData] = useState<any>(null);
 
-  // ==================== 公共样式常量 ====================
+  // ==================== Common style constants ====================
   const collapsedButtonStyle = {
     width: '40px',
     height: '40px',
@@ -336,7 +336,7 @@ const App: React.FC = () => {
     color: '#999'
   };
 
-  // ==================== 公共函数 ====================
+  // ==================== Common functions ====================
   const createNewConversation = () => {
     if (conversations.some(conv => conv.label === 'New Conversation')) {
       message.warning('New session already exists, please ask a question.');
@@ -348,13 +348,13 @@ const App: React.FC = () => {
       return;
     }
 
-    // 关闭右侧侧边栏
+    // Close right sidebar
     setRightSiderCollapsed(true);
 
-    // 生成新的session ID
+    // Generate new session ID
     const newSessionId = generateNewSessionId();
 
-    // 创建新的会话项
+    // Create new session item
     const newConversation: ConversationItem = {
       key: newSessionId,
       label: 'New Conversation',
@@ -388,15 +388,15 @@ const App: React.FC = () => {
 
   const handleSessionChange = async (val: string) => {
     try {
-      // 先从服务端刷新session列表
+      // First refresh session list from server
       await fetchSessions();
 
-      // 然后设置当前选中的session
+      // Then set currently selected session
       setCurConversation(val);
       setSessionId(val);
       updateURLSessionId(val);
 
-      // 使用刷新后的sessionData来获取当前session的消息
+      // Use refreshed sessionData to get current session messages
       const session = sessionData[val];
       if (session?.messages.length > 0) {
         const chatMessages = session.messages.map((msg, index) => ({
@@ -635,7 +635,7 @@ const App: React.FC = () => {
     }
   };
 
-  // ==================== 组件渲染函数 ====================
+  // ==================== Component render functions ====================
   const renderCollapsedSider = () => (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', marginTop: '20px', flex: 1 }}>

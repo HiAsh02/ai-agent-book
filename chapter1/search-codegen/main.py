@@ -75,8 +75,8 @@ Usage:
   appropriate tools automatically.                      
                                                         
 Examples:                                               
-  "东盟 10 国首都之间，距离最近的两个首都是？给出你的详细分析推理过程。"
-  "搜索最近一年比特币的价格，计算收益率、最大回撤、年化波动等重要指标"
+  "Which two capitals among the 10 ASEAN capitals are closest? Provide your detailed analysis and reasoning process."
+  "Search Bitcoin price over the past year, calculate yield, maximum drawdown, annualized volatility and other key indicators."
         """
         print(help_text)
     
@@ -270,8 +270,8 @@ Examples:
 
 
 def _run_single(args):
-    """执行单次请求（single / dry-run 模式），打印可读轨迹并按需保存结果。"""
-    # dry-run 只组装请求体、不联网，因此无需真实 API Key
+    """Execute single request (single / dry-run mode), print readable trace and save results as needed."""
+    # dry-run only assembles the request body without network access, so no real API Key is needed
     api_key = Config.OPENROUTER_API_KEY or ("sk-or-DRYRUN-PLACEHOLDER" if args.dry_run else "")
 
     agent = GPT5NativeAgent(
@@ -290,13 +290,13 @@ def _run_single(args):
         dry_run=args.dry_run
     )
 
-    # dry-run：打印将要发送给模型的完整请求体（原生工具定义 + 参数）
+    # dry-run: print the complete request body (native tool definitions + parameters) to be sent to the model
     if result.get("dry_run"):
         print("\n" + "=" * 60)
-        print("🧪 Dry-run：以下是发送给 GPT-5 的请求体（未联网）")
+        print("🧪 Dry-run: Below is the request body to be sent to GPT-5 (no network)")
         print("=" * 60)
         print(f"Model: {result['model']}")
-        print(f"任务: {args.request}")
+        print(f"Task: {args.request}")
         print("-" * 60)
         print(json.dumps(result["request"], indent=2, ensure_ascii=False))
         print("=" * 60)
@@ -318,28 +318,28 @@ def _run_single(args):
     else:
         print(f"❌ Error: {result.get('error')}")
 
-    # 按需将完整结果（含轨迹/请求体）保存为 JSON，便于复盘
+    # Optionally save the complete result (including trace/request body) as JSON for review
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2, ensure_ascii=False)
-        print(f"💾 结果已保存到: {args.output}")
+        print(f"💾 Result saved to: {args.output}")
 
     if not result["success"]:
         sys.exit(1)
 
 
 def main():
-    """主入口：解析命令行参数并分派到交互 / 单次 / 测试模式。"""
+    """Main entry: parse command line arguments and dispatch to interactive / single / test mode."""
     parser = argparse.ArgumentParser(
-        description="GPT-5 原生工具 Agent —— 演示实验 1.3：网络搜索 + 代码解释器的原生 Deep Research 能力",
+        description="GPT-5 Native Tool Agent —— Demo Experiment 1.3: Native Deep Research capability with web search + code interpreter",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""示例：
-  python main.py                                    # 交互模式（默认）
-  python main.py --mode single --request "东盟 10 国首都之间距离最近的两个首都是？"
-  python main.py --mode single --request "分析比特币近一月走势" --reasoning high --verbosity high
+        epilog="""Examples:
+  python main.py                                    # Interactive mode (default)
+  python main.py --mode single --request "Which two capitals among the 10 ASEAN capitals are closest?"
+  python main.py --mode single --request "Analyze Bitcoin trend over the past month" --reasoning high --verbosity high
   python main.py --mode single --request "..." --output result.json
-  python main.py --dry-run --request "..."          # 离线查看请求体（原生工具定义），无需 API Key
-  python main.py --mode test --test basic           # 运行指定测试用例
+  python main.py --dry-run --request "..."          # Offline view request body (native tool definitions), no API Key needed
+  python main.py --mode test --test basic           # Run specified test case
 """,
     )
 
@@ -347,68 +347,68 @@ def main():
         "--mode",
         choices=["interactive", "single", "test"],
         default="interactive",
-        help="运行模式：interactive 交互对话（默认）/ single 单次请求 / test 运行测试",
+        help="Run mode: interactive conversation (default) / single request / test run",
     )
     parser.add_argument(
         "--request",
         type=str,
-        help="single / dry-run 模式下的任务或查询内容",
+        help="Task or query content in single / dry-run mode",
     )
     parser.add_argument(
         "--model",
         type=str,
         default=None,
-        help=f"覆盖模型名称（默认取配置 {Config.MODEL_NAME}）",
+        help=f"Override model name (default from config {Config.MODEL_NAME}）",
     )
     parser.add_argument(
         "--reasoning",
         choices=["low", "medium", "high"],
         default="low",
-        help="推理力度 Reasoning Effort（low/medium/high，默认 low）",
+        help="Reasoning Effort (low/medium/high, default low)",
     )
     parser.add_argument(
         "--verbosity",
         choices=["low", "medium", "high"],
         default=None,
-        help="输出详略程度 Verbosity（low/medium/high，默认跟随模型）",
+        help="Verbosity (low/medium/high, default follows model)",
     )
     parser.add_argument(
         "--no-tools",
         action="store_true",
-        help="禁用原生工具（web_search / code_interpreter）",
+        help="Disable native tools (web_search / code_interpreter)",
     )
     parser.add_argument(
         "--output",
         type=str,
         default=None,
-        help="将完整结果（含轨迹 / 请求体）保存为 JSON 文件的路径",
+        help="Path to save complete result (including trace/request body) as JSON file",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="离线组装并打印请求体（含原生工具定义），不调用 API、无需 API Key",
+        help="Assemble and print request body offline (including native tool definitions), no API call, no API Key needed",
     )
     parser.add_argument(
         "--test",
         type=str,
-        help="test 模式下运行指定测试用例（basic/analysis/complex/code/reasoning/search_analyze/chain）",
+        help="Run specified test case in test mode (basic/analysis/complex/code/reasoning/search_analyze/chain)",
     )
 
     args = parser.parse_args()
 
-    # dry-run：离线路径，跳过 API Key 校验
+    # dry-run: offline path, skip API Key validation
     if args.dry_run:
         if not args.request:
-            print("❌ --dry-run 需要配合 --request 使用")
+            print("❌ --dry-run requires --request")
             sys.exit(1)
         _run_single(args)
         return
 
-    # 其余模式需要有效配置
+    # Other modes require valid configuration
     if not Config.validate():
-        print("❌ 配置错误！")
-        print("请创建 .env 文件并填入 OPENROUTER_API_KEY")
-        print("\n示例 .env：")
+        print("❌ Configuration error!")
+        print("Please create .env file and fill in OPENROUTER_API_KEY")
+        print("\nExample .env:")
         print("OPENROUTER_API_KEY=sk-or-v1-your-key-here")
         sys.exit(1)
 
@@ -418,7 +418,7 @@ def main():
 
     elif args.mode == "single":
         if not args.request:
-            print("❌ single 模式需要 --request 参数")
+            print("❌ single mode requires --request parameter")
             sys.exit(1)
         _run_single(args)
 

@@ -20,7 +20,7 @@ const cardLinkList: React.FC<Props> = ({ sessionId, data, onOpenWorkspace }) => 
   const items = data?.card_data?.search_items;
 
   const cardItems = Array.isArray(items) ? items.filter((item) => item?.title && item?.link) : [];
-  // 打开workspace
+  //  open workspace
   const handleOpenWorkspace = useCallback(() => {
     if (onOpenWorkspace) {
       onOpenWorkspace(data);

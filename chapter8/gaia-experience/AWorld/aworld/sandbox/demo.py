@@ -10,7 +10,7 @@ async def run_async_tasks(sand_box):
     return tools
 
 if __name__ == "__main__":
-    # 只使用memory服务器
+    #  Use only the memory server
     mcp_servers = ["memory","amap-amap-sse"]
     mcp_config = {
       "mcpServers": {

@@ -1,31 +1,31 @@
 """
-精简版「航空客服」模拟环境（对标 tau-bench 的航空场景，但去掉复杂度）。
+Simplified version of the "Aviation Customer Service" simulation environment (comparable to the aviation scenario in tau-bench, but with reduced complexity).
 
-包含三部分：
-1. TOOLS      —— 暴露给 Agent 的工具（含关键的 transfer_to_human）。
-2. run_agent  —— 一个带工具调用循环的最小 Agent：给定 system prompt 和用户请求，
-                 返回它是否转接人工、以及最终回复。
-3. CASES      —— 两组评测用例：
-                 - 保留任务集(holdout)：正常请求，Agent 应正确处理（不该转的别转，该转的要转）。
-                 - 边界案例集(boundary)：政策争议，Agent 应解释政策而非一转了之。
+It consists of three parts:
+1. TOOLS      —— Tools exposed to the agent (including the critical transfer_to_human).
+2. run_agent  —— A minimal agent with a tool-calling loop: given a system prompt and user request,
+                 it returns whether to transfer to human and the final response.
+3. CASES      —— Two sets of evaluation cases:
+                 - Holdout task set: normal requests that the agent should handle correctly (should not transfer when not needed, and should transfer when necessary).
+                 - Boundary case set: policy disputes where the agent should explain the policy rather than simply transferring.
 """
 
 import json
 from config import get_client, get_model, TEMPERATURE
 
 # ----------------------------------------------------------------------------
-# 1. 工具定义（OpenAI function-calling 格式）
+# 1. Tool definitions (OpenAI function-calling format)
 # ----------------------------------------------------------------------------
 TOOLS = [
     {
         "type": "function",
         "function": {
             "name": "lookup_reservation",
-            "description": "根据订单号查询乘客的订单详情（航班、舱位、票价类型等）。",
+            "description": "Query passenger order details (flight, cabin, fare type, etc.) by order number.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "confirmation_code": {"type": "string", "description": "订单号"}
+                    "confirmation_code": {"type": "string", "description": "Order number"}
                 },
                 "required": ["confirmation_code"],
             },
@@ -35,12 +35,12 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "change_flight",
-            "description": "为乘客办理改签到指定的新航班。",
+            "description": "Process a rebooking for the passenger to a specified new flight.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "confirmation_code": {"type": "string"},
-                    "new_flight": {"type": "string", "description": "新航班号或日期"},
+                    "new_flight": {"type": "string", "description": "New flight number or date"},
                 },
                 "required": ["confirmation_code", "new_flight"],
             },
@@ -50,11 +50,11 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_refund_policy",
-            "description": "查询退票/退款政策。传入票价类型（如 经济舱特价票/全价经济舱/商务舱）。",
+            "description": "Query refund/cancellation policy. Input fare type (e.g., economy special fare/full-fare economy/business class).",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "fare_type": {"type": "string", "description": "票价类型"}
+                    "fare_type": {"type": "string", "description": "Fare type"}
                 },
                 "required": ["fare_type"],
             },
@@ -64,11 +64,11 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_baggage_policy",
-            "description": "查询行李额与逾重费政策。传入舱位等级。",
+            "description": "Query baggage allowance and excess baggage fee policy. Input cabin class.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "cabin": {"type": "string", "description": "舱位等级，如 经济舱/商务舱"}
+                    "cabin": {"type": "string", "description": "Cabin class, e.g., economy/business class"}
                 },
                 "required": ["cabin"],
             },
@@ -78,12 +78,12 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "change_seat",
-            "description": "为乘客办理选座或换座。",
+            "description": "Process seat selection or seat change for the passenger.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "confirmation_code": {"type": "string"},
-                    "seat": {"type": "string", "description": "目标座位号"},
+                    "seat": {"type": "string", "description": "Target seat number"},
                 },
                 "required": ["confirmation_code", "seat"],
             },
@@ -93,11 +93,11 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "transfer_to_human",
-            "description": "把对话转接给人工客服。调用后 Agent 不再继续处理本次请求。",
+            "description": "Transfer the conversation to a human agent. After calling, the agent will no longer process the current request.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "reason": {"type": "string", "description": "转接原因"}
+                    "reason": {"type": "string", "description": "Transfer reason"}
                 },
                 "required": ["reason"],
             },
@@ -106,43 +106,43 @@ TOOLS = [
 ]
 
 # ----------------------------------------------------------------------------
-# 2. 工具的 mock 实现（返回固定的模拟数据，供 Agent 组织回复）
+# 2. Mock implementation of tools (returns fixed simulated data for the agent to compose responses)
 # ----------------------------------------------------------------------------
 _POLICY_REFUND = {
-    "经济舱特价票": "经济舱特价票为不可退票产品，不支持自愿退款；如未起飞可申请退还机建燃油等税费。",
-    "全价经济舱": "全价经济舱起飞前可退，收取 5% 退票手续费。",
-    "商务舱": "商务舱起飞前可全额退票，不收手续费。",
+    "Economy special fare": "Economy special fare is non-refundable and does not support voluntary refunds; if not yet departed, taxes and fees such as fuel surcharge and airport construction fee can be refunded.",
+    "Full-fare economy": "Full-fare economy can be refunded before departure with a 5% cancellation fee.",
+    "Business class": "Business class can be fully refunded before departure with no fee.",
 }
 
 
 def _run_tool(name: str, args: dict) -> str:
-    """执行工具，返回给模型的字符串结果。"""
+    """Execute tool and return the string result to the model."""
     if name == "lookup_reservation":
         return json.dumps(
             {
                 "confirmation_code": args.get("confirmation_code", "UNKNOWN"),
-                "passenger": "张伟",
-                "flight": "YS1234 上海虹桥→北京首都 2026-08-01 09:00",
-                "cabin": "经济舱",
-                "fare_type": "经济舱特价票",
-                "status": "已出票",
+                "passenger": "Zhang Wei",
+                "flight": "YS1234 Shanghai Hongqiao→Beijing Capital 2026-08-01 09:00",
+                "cabin": "Economy class",
+                "fare_type": "Economy special fare",
+                "status": "Ticketed",
             },
             ensure_ascii=False,
         )
     if name == "change_flight":
         return json.dumps(
-            {"result": "success", "new_flight": args.get("new_flight"), "fee": "改签费 200 元"},
+            {"result": "success", "new_flight": args.get("new_flight"), "fee": "Change fee 200 yuan"},
             ensure_ascii=False,
         )
     if name == "get_refund_policy":
-        fare = args.get("fare_type", "经济舱特价票")
-        text = _POLICY_REFUND.get(fare, _POLICY_REFUND["经济舱特价票"])
+        fare = args.get("fare_type", "Economy special fare")
+        text = _POLICY_REFUND.get(fare, _POLICY_REFUND["Economy special fare"])
         return json.dumps({"fare_type": fare, "policy": text}, ensure_ascii=False)
     if name == "get_baggage_policy":
-        cabin = args.get("cabin", "经济舱")
-        free = "20kg" if "经济" in cabin else "30kg"
+        cabin = args.get("cabin", "Economy class")
+        free = "20kg" if "Economy" in cabin else "30kg"
         return json.dumps(
-            {"cabin": cabin, "free_allowance": free, "excess_fee": "逾重费 50 元/kg"},
+            {"cabin": cabin, "free_allowance": free, "excess_fee": "Excess baggage fee 50 yuan/kg"},
             ensure_ascii=False,
         )
     if name == "change_seat":
@@ -153,16 +153,16 @@ def _run_tool(name: str, args: dict) -> str:
 
 
 # ----------------------------------------------------------------------------
-# 3. 最小 Agent 循环
+# 3. Minimal agent loop
 # ----------------------------------------------------------------------------
 def run_agent(system_prompt: str, user_message: str, max_steps: int = 4) -> dict:
     """
-    运行一次客服会话。返回：
+    Run a customer service session. Returns:
       {
-        "transferred": bool,        # 是否调用了 transfer_to_human
+        "transferred": bool,        # Whether transfer_to_human was called
         "transfer_reason": str|None,
-        "final_text": str,          # Agent 面向乘客的最终回复（若转接则为空）
-        "tool_calls": [str, ...],   # 依次调用过的工具名
+        "final_text": str,          # Agent's final reply to the passenger (empty if transferred)
+        "tool_calls": [str, ...],   # Names of tools called in order
       }
     """
     client = get_client()
@@ -183,7 +183,7 @@ def run_agent(system_prompt: str, user_message: str, max_steps: int = 4) -> dict
         msg = resp.choices[0].message
 
         if not msg.tool_calls:
-            # 模型直接给出面向乘客的文字回复 —— 会话结束
+            # Model directly gives a text reply to the passenger — session ends
             return {
                 "transferred": False,
                 "transfer_reason": None,
@@ -191,7 +191,7 @@ def run_agent(system_prompt: str, user_message: str, max_steps: int = 4) -> dict
                 "tool_calls": tool_calls_log,
             }
 
-        # 有工具调用，先把 assistant 消息加入历史
+        # There is a tool call, first add the assistant message to history
         messages.append(msg)
 
         transferred_now = False
@@ -223,7 +223,7 @@ def run_agent(system_prompt: str, user_message: str, max_steps: int = 4) -> dict
                 "tool_calls": tool_calls_log,
             }
 
-    # 超出步数上限仍未收敛，兜底再要一次纯文本回复
+    # Exceeded step limit without convergence, fallback to request a plain text reply again
     resp = client.chat.completions.create(
         model=model, messages=messages, temperature=TEMPERATURE
     )
@@ -236,85 +236,85 @@ def run_agent(system_prompt: str, user_message: str, max_steps: int = 4) -> dict
 
 
 # ----------------------------------------------------------------------------
-# 4. 评测用例
+# 4. Evaluation Cases
 # ----------------------------------------------------------------------------
-# 每个用例字段：
-#   id / group / user   —— 用户请求
-#   should_transfer     —— 正确行为是否应当转接人工
-#   rubric              —— 当 should_transfer=False 时，判定"是否妥善处理"的要点
+# Fields for each case:
+#   id / group / user   —— user request
+#   should_transfer     —— whether the correct behavior should transfer to human
+#   rubric              —— when should_transfer=False, criteria for judging "proper handling"
 CASES = [
-    # ---------- 保留任务集(holdout)：既有正确行为，优化后不能退化 ----------
+    # ---------- Holdout task set: correct behavior exists, must not regress after optimization ----------
     {
-        "id": "H1-改签",
+        "id": "H1-Change Booking",
         "group": "holdout",
-        "user": "你好，我的订单号是 ABC123，想把 8 月 1 日的航班改到 8 月 3 日，帮我改一下。",
+        "user": "Hello, my order number is ABC123. I want to change my flight from August 1 to August 3. Please help me change it.",
         "should_transfer": False,
-        "rubric": "查询订单并为乘客办理/说明改签到 8 月 3 日的相关信息（如改签费），而不是转人工。",
+        "rubric": "Query the order and handle/explain the change to August 3 (e.g., change fee) for the passenger, rather than transferring to human.",
     },
     {
-        "id": "H2-行李额",
+        "id": "H2-Baggage Allowance",
         "group": "holdout",
-        "user": "我买的是经济舱，免费托运行李额是多少？超重了怎么收费？",
+        "user": "I bought economy class. What is the free checked baggage allowance? How is overweight charged?",
         "should_transfer": False,
-        "rubric": "给出经济舱免费行李额与逾重费的具体政策信息，而不是转人工。",
+        "rubric": "Provide specific policy information on economy class free baggage allowance and excess baggage fees, rather than transferring to human.",
     },
     {
-        "id": "H3-选座",
+        "id": "H3-Seat Selection",
         "group": "holdout",
-        "user": "订单号 ABC123，我想换到靠窗的 32A 座位。",
+        "user": "Order number ABC123, I want to switch to window seat 32A.",
         "should_transfer": False,
-        "rubric": "为乘客办理/确认换到 32A 座位，而不是转人工。",
+        "rubric": "Handle/confirm the switch to seat 32A for the passenger, rather than transferring to human.",
     },
     {
-        "id": "H4-明确要人工",
+        "id": "H4-Explicitly Request Human",
         "group": "holdout",
-        "user": "别跟我扯了，我就要跟人工客服说话，马上给我转人工。",
-        "should_transfer": True,  # 乘客明确要求人工 —— 这类本就该转，优化后仍要能转
-        "rubric": "乘客明确要求人工客服，应当转接。",
+        "user": "Stop messing around, I want to talk to a human agent. Transfer me to a human right now.",
+        "should_transfer": True,  # Passenger explicitly requests human — this should be transferred, and must still be transferable after optimization
+        "rubric": "Passenger explicitly requests human agent, should transfer.",
     },
     {
-        "id": "H5-紧急安全",
+        "id": "H5-Emergency Safety",
         "group": "holdout",
-        "user": "我现在在机场，同行的老人突然晕倒了，赶不上 YS1234 航班了，需要马上有人帮忙处理！",
-        "should_transfer": True,  # 紧急安全 —— 本就该转，优化后仍要能转
-        "rubric": "涉及紧急人身安全，应当转接人工立即介入。",
+        "user": "I am at the airport now, an elderly companion suddenly collapsed and cannot make flight YS1234. Need someone to handle it immediately!",
+        "should_transfer": True,  # Emergency safety — this should be transferred, and must still be transferable after optimization
+        "rubric": "Involves urgent personal safety, should transfer to human for immediate intervention.",
     },
 
-    # ---------- 边界案例集(boundary)：政策争议，应解释政策而非一转了之 ----------
+    # ---------- Boundary case set: policy disputes, should explain policy rather than simply transferring ----------
     {
-        "id": "B1-不可退票要退款",
+        "id": "B1-Non-refundable Ticket Requesting Refund",
         "group": "boundary",
-        "user": "我要求全额退款！订单 ABC123。我不管，我就要全退。",
+        "user": "I demand a full refund! Order ABC123. I don't care, I want a full refund.",
         "should_transfer": False,
-        "rubric": "查询退票政策后，耐心解释该票（经济舱特价票）为不可退票产品、可退税费，并给出可行替代方案，而不是转人工。",
+        "rubric": "After querying the refund policy, patiently explain that this ticket (economy special fare) is non-refundable, but taxes can be refunded, and provide feasible alternatives instead of transferring to a human agent.",
     },
     {
-        "id": "B2-要求免改签费",
+        "id": "B2-Request to waive change fee",
         "group": "boundary",
-        "user": "改签还要收我 200 块？凭什么！你必须给我免掉这个改签费，不然没完。",
+        "user": "You're charging me 200 yuan for a change? Why! You must waive this change fee, or I won't let it go.",
         "should_transfer": False,
-        "rubric": "耐心解释改签费的政策依据，说明无法违规减免，并提供合规的替代方案，而不是因为乘客不满就转人工。",
+        "rubric": "Patiently explain the policy basis for the change fee, state that it cannot be waived illegally, and provide compliant alternatives instead of transferring to a human agent due to passenger dissatisfaction.",
     },
     {
-        "id": "B3-小延误索赔",
+        "id": "B3-Compensation for minor delay",
         "group": "boundary",
-        "user": "航班晚了半小时，害我差点误事，我要求航空公司赔偿我 500 块！",
+        "user": "The flight was delayed by half an hour, almost causing me trouble. I demand the airline compensate me 500 yuan!",
         "should_transfer": False,
-        "rubric": "共情并解释延误补偿的政策门槛（30 分钟的短延误通常不达补偿标准），说明处理口径，而不是转人工。",
+        "rubric": "Empathize and explain the policy threshold for delay compensation (a short delay of 30 minutes usually does not meet the compensation criteria), state the handling position, instead of transferring to a human agent.",
     },
     {
-        "id": "B4-索要免费升舱",
+        "id": "B4-Demand free upgrade",
         "group": "boundary",
-        "user": "我是老客户了，这次必须给我免费升到商务舱，这点面子都不给？",
+        "user": "I'm a loyal customer. This time you must give me a free upgrade to business class. Can't you even give me that face?",
         "should_transfer": False,
-        "rubric": "礼貌解释免费升舱不符合政策、说明可付费升舱或积分兑换等合规途径，而不是转人工。",
+        "rubric": "Politely explain that free upgrades are not in line with policy, and indicate compliant options such as paid upgrades or mileage redemption, instead of transferring to a human agent.",
     },
     {
-        "id": "B5-超额免费行李",
+        "id": "B5-Excess free baggage",
         "group": "boundary",
-        "user": "我经济舱，这次要带 3 件行李，你们必须都给我免费托运，别收钱。",
+        "user": "I'm in economy class, and this time I need to bring 3 pieces of luggage. You must check them all for free, no charges.",
         "should_transfer": False,
-        "rubric": "解释经济舱的免费行李额与超出部分的收费政策，说明无法全部免费，并给出合规建议，而不是转人工。",
+        "rubric": "Explain the free baggage allowance for economy class and the charges for excess baggage, state that not all can be free, and provide compliant suggestions instead of transferring to a human agent.",
     },
 ]
 
