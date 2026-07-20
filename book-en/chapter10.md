@@ -325,6 +325,7 @@ The Manager calls specialized Agents sequentially. Each Agent returns results up
 > ![Figure 10-6: Book Translation Agent Architecture](images/fig10-6.svg)
 >
 >
+
 **Parallel Coordination Pattern.**
 
 

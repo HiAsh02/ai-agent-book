@@ -183,6 +183,7 @@ Q-learning is a specific type of **off-policy** method—it can use data generat
 >
 > The fundamental limitations of MDP are threefold: low sample efficiency (requiring massive interaction to learn simple tasks), poor generalization (knowledge learned in one environment is difficult to transfer to another), and inability to leverage prior knowledge (each new task must be learned from scratch). These limitations become particularly pronounced when facing complex state spaces like natural language or high-dimensional vision.
 >
+
 **Modern Paradigm: LLM+RL-based Agents.**
 
 Large language models have brought about a new paradigm for Agents, fundamentally changing how Agents are built—especially in the design of the action space.
@@ -223,6 +224,7 @@ Taking models like Kimi K3, optimized for tool calling and long-chain thinking, 
 >
 > Computational cost presents an interesting paradox: Q-learning runs 10,000 games in 10 seconds, while the LLM Agent takes 1-2 minutes per game. However, in real-world tasks, the time, money, and risk costs per interaction far outweigh pure computational costs, so judging solely by GPU time is unfair. A more critical insight is: The LLM Agent's success isn't due to having a better "learning algorithm," but because it carries vast prior knowledge. When game rules change, Q-learning needs complete retraining, while the LLM Agent can adapt directly through reasoning. This leads to a practical design principle: Traditional RL remains valuable in scenarios with low simulation costs and high repeatability; in real-world scenarios with high interaction costs and a need for rapid adaptation, the sample efficiency of LLM Agents is more practical.
 >
+
 Chapter 1 already compared the three learning paradigms—in-context learning, externalized learning, and parametric learning (post-training)—and how they complement one another; the "Complete Picture" at the end of this chapter returns to that topic. This chapter's main thread is post-training: writing interaction strategies into model parameters.
 
 ## Model Pre-training Basics `[Optional Reading]`
@@ -253,6 +255,7 @@ Language model training follows a three-stage process: "tokenization — pre-tra
 >
 > Using Mistral 7B v0.3 as a base (primarily pre-trained on English, with almost no understanding of Korean), inject Korean capability through continued pre-training on Korean Wikipedia—performing unsupervised training on new language data using a model that has already completed pre-training. The model already possesses general language modeling capabilities and only needs to adapt to the new data distribution, making the cost much lower than training from scratch. A key engineering point is using mixed data (~80% Korean + 20% English) to mitigate catastrophic forgetting: too high a proportion of the target language leads to degradation in the original language, while too low a proportion results in insufficient learning efficiency. Finally, SFT is performed with Korean instruction data to obtain practical Korean conversational ability. The conclusion of this experiment will be used again in the complete picture at the end of this chapter: to make a model remember a large amount of new domain knowledge, rely on continued pre-training, not SFT.
 >
+
 The three pre-training experiments collectively reveal a pattern: when budgets are constrained, algorithmic improvements and architectural innovations offer better value than simply scaling up size. More importantly, pre-training endows the model with descriptive knowledge and language modeling capabilities, but lacks structured instruction following and task-oriented behavior—this is precisely the gap that SFT needs to fill.
 
 With the foundational capabilities from pre-training, the next step is to transform the general-purpose model into a practical Agent through post-training. The first stage of post-training is Supervised Fine-Tuning (SFT).
@@ -296,6 +299,7 @@ The price of this efficiency is a strong dependence on the training distribution
 >
 > **Acceptance Criteria:** The distilled student model shows significant improvement on math/code benchmarks compared to before distillation, and its thinking trajectories exhibit teacher-like behaviors such as reflection, backtracking, and verification. Also, be aware of the cost of distillation: the student will inherit the teacher's systematic errors and verbose thinking habits (the latter can be further optimized using the AdaptThink approach from Experiment 7-10).
 >
+
 These four experiments share a common feature—"writing stable mappings and protocols into parameters": voice SFT solidifies style control protocols, multilingual SFT solidifies thinking organization templates, and distillation SFT solidifies the direct mapping from input to output. What they have in common is clear objectives, clean formats, and stable evaluation criteria, which lets SFT deliver gains with extremely high sample efficiency; but once the distribution shifts, the memorization tendency shows itself as degraded performance. This is the experimental manifestation of the memory-generalization divide discussed in Section 7.1, "The Essential Difference Between SFT and RL."
 
 ## When to Choose SFT and When to Choose RL

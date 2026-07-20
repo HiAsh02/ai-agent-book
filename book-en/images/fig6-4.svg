@@ -12,8 +12,8 @@
 <text x="415" y="82" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="bold">Candidate Answer</text>
 <line x1="300" y1="94" x2="530" y2="94" stroke="#999999" stroke-width="2"/>
 <text x="305" y="115" font-family="'Courier New', Courier, monospace" font-size="12" fill="#333333" text-anchor="start" dominant-baseline="central">Agent Output:</text>
-<text x="305" y="137" font-family="'Courier New', Courier, monospace" font-size="7" fill="#333333" text-anchor="start" dominant-baseline="central">&amp;quot;Refund processed, $150 will be credited within</text>
-<text x="305" y="159" font-family="'Courier New', Courier, monospace" font-size="12" fill="#333333" text-anchor="start" dominant-baseline="central"> 3-5 business days.&amp;quot;</text>
+<text x="305" y="137" font-family="'Courier New', Courier, monospace" font-size="7" fill="#333333" text-anchor="start" dominant-baseline="central">&quot;Refund processed, $150 will be credited within</text>
+<text x="305" y="159" font-family="'Courier New', Courier, monospace" font-size="12" fill="#333333" text-anchor="start" dominant-baseline="central"> 3-5 business days.&quot;</text>
 <text x="305" y="181" font-family="'Courier New', Courier, monospace" font-size="12" fill="#333333" text-anchor="start" dominant-baseline="central"></text>
 <rect x="570" y="60" width="250" height="150" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
 <text x="695" y="82" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="bold">Reference Solution (Optional)</text>

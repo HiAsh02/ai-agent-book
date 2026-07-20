@@ -520,6 +520,7 @@ The Proposer-Reviewer iterative loop in this chapter shares the same origin as t
 > ![Figure 5-6: End-to-end pipeline from paper to explanation video](images/fig5-6.svg)
 >
 >
+
 **Video Editing Agent.**
 
 Doing video editing through general Computer Use runs into a fundamental obstacle: video editing GUIs are extraordinarily complex — dense with timelines, layers, and effect panels. An Agent would have to locate these interface elements precisely and edit via mouse and keyboard, and emitting exact coordinates is very hard.
@@ -566,6 +567,7 @@ Code generation offers an elegant solution: establishing an auto-repair feedback
 >
 > **Acceptance Criteria**: Automatically detect failures and trigger learning, generate code that passes automated tests, correctly parse new formats after hot-update.
 >
+
 **Automatic Analysis and Problem Diagnosis of Agent Execution Logs.**
 
 Agents in production generate a large volume of trajectory logs (recording the complete process of each task). However, identifying problems, locating root causes, and constructing test cases from these logs is a high-cost endeavor. Problem localization is difficult because task failures can result from collaborative errors across multiple modules; reproduction costs are high because the complexity of the production environment is hard to simulate in a test environment; and fixed problems tend to recur due to a lack of systematic regression testing.
@@ -619,6 +621,7 @@ Through code generation, the Agent can create structured interactive interfaces 
 >
 > **Acceptance Criteria**: User inputs "I want to book a flight to Beijing." The Agent generates a form containing: departure city (text input), departure date (date picker), trip type (radio: one-way/round-trip), return date (only displayed when "round-trip" is selected). The user submits all information in one go.
 >
+
 **Generating SQL Queries.**
 
 Database querying is a scenario where code generation can significantly enhance the interaction experience. Traditional database access relies on GUI tools or handwritten SQL; the former is cumbersome to operate, and the latter requires the user to have specialized knowledge. An Agent can translate natural language into SQL, but there is a key design choice here: should the Agent execute the SQL and then describe the results in natural language, or should the Agent generate the SQL code as an artifact for the frontend to execute directly?
@@ -647,6 +650,7 @@ Going further, the Agent can generate two artifacts forming a pipeline: SQL quer
 > 9. Which 10 employees had the largest salary increase from last year to this year?
 > 10. Are there any cases of unpaid wages (employed in a month but no salary record)?
 >
+
 **Dynamically Generating Software.**
 
 The ultimate application of code generation is letting the Agent create software entirely dynamically, from scratch. Anthropic's "Imagine with Claude" marks out the frontier: the user makes a request, Claude generates the frontend interface and interaction logic in real time, the user interacts with the generated software, and Claude modifies the code to produce a new interface showing the results. The user watches an application come into being from nothing and keep evolving.
@@ -708,6 +712,7 @@ When an Agent receives a task to develop a new Agent, it should first copy its o
 > ![Figure 5-11: Pipeline of an Agent That Can Create Agents](images/fig5-11.svg)
 >
 >
+
 Agent bootstrapping is the ultimate application of code generation—an Agent that can create Agents achieves the self-replication of intelligence. With that, we have traced the chapter's full arc: from the foundations of the Coding Agent, through the many uses of code generation, to bootstrapping.
 
 ## Chapter Summary

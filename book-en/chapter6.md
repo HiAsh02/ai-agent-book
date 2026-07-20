@@ -145,6 +145,7 @@ The enhanced **τ²-bench** advances not in scoring granularity but on two other
 >
 > Pay special attention to the newly added telecom domain tasks in τ²-bench, and understand its dual-control environment design (as mentioned earlier, the user and the Agent jointly operate the same shared environment).
 >
+
 Tool-calling evaluation asks whether an observable state change was completed; human-computer interaction evaluation asks whether the user was guided through a change in understanding or decision. The former tests the correctness of the Agent's actions; the latter, the soundness of its communication strategy.
 
 Building evaluation environments also touches on simulation environments—an evaluation environment that must support repeated interaction at large scale evolves into one. The end of this chapter takes this up briefly.
@@ -358,6 +359,7 @@ Send this Rubric together with the Agent's actual response to the judging model,
 >
 > **Acceptance Criteria**: Record success rate, average steps, number of tool calls, latency, and cost across three complexity levels (basic recall / multi-session disambiguation / cross-session hidden associations). Clearly describe the failure boundaries for each approach—what structure misses, what retrieval misses, and whether the hybrid truly achieves synergy. Configuration details and test cases are available in the companion repository.
 >
+
 **The Same-Family Model Problem and Multi-Source Judging.**
 
 When the Agent and the judging model come from the same family, the Agent may learn to exploit the judging model's preferences and blind spots.
@@ -387,6 +389,7 @@ Multimodal judging extends LLM-as-a-Judge to the domains of speech, images, and 
 >
 > Build a diverse test corpus: varying lengths (single sentence → long paragraph), genres (news/story/dialogue), emotions (neutral/excited/sad), and special challenges (numbers/proper nouns/polyphonic characters/dialectal vocabulary). Implement the evaluation pipeline: The TTS generation module connects to mainstream services (OpenAI, ElevenLabs, Fish Audio, Minimax, Doubao); the multimodal judging module uses Gemini 3.5 Flash to input the synthesized speech, original text, reference voice, and Rubric together, scoring each dimension and providing detailed reasoning. Analyze the distribution of evaluation results to identify the strengths and weaknesses of different TTS models across dimensions—some models may excel in accuracy but lack naturalness, while others have high naturalness but are prone to errors on special vocabulary.
 >
+
 Beyond manually defining Rubrics, specialized **generative reward models** can be trained to automate judging—this involves training methods for reward models, which will be discussed in detail in Chapter 7.
 
 In practical model selection, we often face the question: "Which is better, A or B?" Pairwise comparison provides an evaluation method that does not rely on absolute scores.

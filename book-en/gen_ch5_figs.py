@@ -476,7 +476,7 @@ def fig5_5():
 
 def fig5_6():
     """Experiment 5.6+5.7: Paper→PPT→Video end-to-end pipeline"""
-    w, h = 880, 520
+    w, h = 880, 560
     svg = SVG(w, h)
     svg.text(w / 2, 30, "Experiment 5.6+5.7: Paper → PPT → Lecture video", size=FS_TITLE, bold=True)
 
@@ -484,8 +484,8 @@ def fig5_6():
     stages_top = [
         ("PDF Input", 'medium', [
             "paper.pdf",
-            "Parse chapter structure",
-            "Extract figure references",
+            "Parse doc structure",
+            "Extract figure refs",
         ]),
         ("Content Planning", 'light', [
             "10-20 page structure",
@@ -493,14 +493,14 @@ def fig5_6():
             "Assign figures to pages",
         ]),
         ("Slidev Generation", 'light', [
-            "Generate code page by page",
+            "Generate page by page",
             "layout: two-cols",
-            "Code + image mixed layout",
+            "Code + image layout",
         ]),
         ("Rendering Check", 'medium', [
             "export --per-slide",
             "Vision LLM review",
-            "Overflow/crowding detection",
+            "Overflow detection",
         ]),
         ("Iterative Fix", 'light', [
             "Reviewer→Proposer",
@@ -539,8 +539,8 @@ def fig5_6():
             "...",
         ]),
         ("Script generation", 'light', [
-            "LLM generates colloquial",
-            "narration text (per page)",
+            "LLM colloquial script",
+            "Narration per page",
             "Guiding narrative",
         ]),
         ("TTS synthesis", 'light', [
@@ -550,13 +550,13 @@ def fig5_6():
         ]),
         ("Audio-video sync", 'medium', [
             "ffmpeg synthesis",
-            "Screenshot duration = audio duration",
+            "Match audio duration",
             "Transition effects",
         ]),
         ("Final video", 'dark', [
             "output.mp4",
             "5-15 minutes",
-            "Visual + auditory dual channel",
+            "Audio + visual output",
         ]),
     ]
 
@@ -581,11 +581,11 @@ def fig5_6():
         ("Rendering", "Zero text overflow · Reasonable layout · Text-image match"),
         ("Video", "5-15 minutes · Audio-video sync · Coherent narration"),
     ]
-    cx = 60
+    cy = 462
     for label, desc in criteria:
-        _pill(svg, cx, 458, 60, 26, label, fill='dark', font_size=12, bold=True)
-        svg.text(cx + 70, 471, desc, size=FS_TINY, fill='text_light', anchor='start')
-        cx += 265
+        _pill(svg, 180, cy, 92, 26, label, fill='dark', font_size=12, bold=True)
+        svg.text(285, cy + 13, desc, size=FS_TINY, fill='text_light', anchor='start')
+        cy += 30
 
     svg.save(os.path.join(OUT, 'fig5-6.svg'))
 

@@ -258,13 +258,13 @@ def fig4_3():
     for i, (title, desc, fill) in enumerate(steps):
         sy = 110 + i * 80
         svg.rect(ag_x, sy, step_w, step_h, fill=fill)
-        svg.text(ag_x + 90, sy + step_h / 2, title, size=FS_SMALL, bold=True, anchor='start')
-        svg.text(ag_x + step_w - 10, sy + step_h / 2, desc, size=FS_TINY, fill='text_light', anchor='end')
+        svg.text(ag_x + 18, sy + step_h / 2, title, size=FS_SMALL, bold=True, anchor='start')
+        svg.text(ag_x + step_w - 12, sy + step_h / 2, desc, size=FS_TINY, fill='text_light', anchor='end')
         if i < len(steps) - 1:
             svg.arrow(ag_x + step_w / 2, sy + step_h + 2, ag_x + step_w / 2, sy + 78)
 
     # Feedback loop
-    svg.arrow_curved(ag_x + step_w, 450, ag_x + step_w, 130, curve=-50, label="Loop", dash=True, color='dark')
+    svg.arrow_curved(ag_x + step_w, 450, ag_x + step_w, 130, curve=45, label="Loop", dash=True, color='dark')
 
     svg.save(os.path.join(OUT, 'fig4-3.svg'))
 
@@ -321,12 +321,12 @@ def fig4_4():
     time_bar(y2 + 15, 0.63, 0.90, 'medium', 'LLM comprehensive processing')
 
     svg.line(tl_x0 + tl_w * 0.35, y2 + 46, tl_x0 + tl_w * 0.35, y2 + 130, color='dark', dash=True)
-    svg.text(tl_x0 + tl_w * 0.35, y2 + 46, "user: \"Only look at the last 1 month\"", size=FS_TINY, fill='text_light')
+    svg.text(tl_x0 + tl_w * 0.35, y2 + 58, "user: \"Only look at the last 1 month\"", size=FS_TINY, fill='text_light')
 
     _pill(svg, tl_x0 + tl_w * 0.30, y2 + 65, 150, 24, "Enqueue waiting", fill='light', font_size=FS_TINY)
 
     time_bar(y2 + 100, 0.63, 0.68, 'dark', '', h_bar=20)
-    svg.text(tl_x0 + tl_w * 0.72, y2 + 110, "Batch append: tool.result + user supplement", size=FS_TINY, fill='text_light')
+    svg.text(tl_x0 + tl_w * 0.61, y2 + 110, "Batch append: tool.result + user input", size=FS_TINY, fill='text_light', anchor='end')
 
     # ── Lane 3: Parallel ──
     y3 = 400
@@ -337,12 +337,12 @@ def fig4_4():
     time_bar(y3 + 15, 0.0, 0.80, 'light', 'Main task: Data analysis (long execution)')
 
     svg.line(tl_x0 + tl_w * 0.30, y3 + 50, tl_x0 + tl_w * 0.30, y3 + 130, color='dark', dash=True)
-    svg.text(tl_x0 + tl_w * 0.30, y3 + 50, "user: \"How is the weather today?\"", size=FS_TINY, fill='text_light')
+    svg.text(tl_x0 + tl_w * 0.30, y3 + 58, "user: \"How is the weather today?\"", size=FS_TINY, fill='text_light')
 
     time_bar(y3 + 70, 0.32, 0.50, 'medium', 'Parallel LLM', h_bar=24)
     time_bar(y3 + 70, 0.52, 0.62, 'dark', 'Weather', h_bar=24)
 
-    svg.text(tl_x0 + tl_w * 0.66, y3 + 82, "→ Reply to user immediately", size=FS_TINY, fill='text_light')
+    svg.text(tl_x0 + tl_w * 0.635, y3 + 82, "→ Reply to user immediately", size=FS_TINY, fill='text_light', anchor='start')
     svg.text(tl_x0 + tl_w * 0.50, y3 + 115, "Tag: [Parallel with main task]", size=FS_TINY, fill='text_light')
 
     svg.save(os.path.join(OUT, 'fig4-4.svg'))

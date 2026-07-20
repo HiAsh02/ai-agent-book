@@ -76,27 +76,27 @@ def fig1_1():
     gap = 20
     x_start = (820 - 3 * col_w - 2 * gap) / 2
 
-    for i, (title, subtitle, time_label, items, example) in enumerate([
-        ('Post-training', 'Post-training', 'Training time', [
+    for i, (title, time_label, items, example) in enumerate([
+        ('Post-training', 'Training time', [
             'Modify model weights',
-            'Permanent · General',
-            'High cost · Slow update',
-        ], 'Example: Learn "when to call tools"'),
-        ('In-context learning', 'In-Context Learning', 'Inference time', [
-            'Soft update via attention mechanism',
-            'Temporary · Immediate Adaptation',
-            'Limited by Window Size',
-        ], 'Example: Learn New Format from 3 Examples'),
-        ('Externalized Learning', 'Externalized Learning', 'Runtime', [
-            'Knowledge Base + Tool Generation',
-            'Persistent · Updatable',
-            'Highly Reliable · Verifiable',
-        ], 'Example: Solidify Process into Code Tool'),
+            'Permanent · general',
+            'High cost · slow to update',
+        ], 'e.g. learn when to call a tool'),
+        ('In-context learning', 'Inference time', [
+            'Soft update via attention',
+            'Temporary · adapts instantly',
+            'Bounded by context window',
+        ], 'e.g. learn a format from 3 examples'),
+        ('Externalized learning', 'Runtime', [
+            'Knowledge base + generated tools',
+            'Persistent · updatable',
+            'Reliable · verifiable',
+        ], 'e.g. freeze a workflow into a tool'),
     ]):
         x = x_start + i * (col_w + gap)
 
         # Header
-        s.box(x, 65, col_w, 65, f'{title}\n{subtitle}', fill='medium', bold=True, font_size=FS_BODY)
+        s.box(x, 65, col_w, 65, title, fill='medium', bold=True, font_size=FS_BODY)
 
         # Time badge
         s.badge(x + col_w / 2 - 40, 140, 80, 28, time_label, fill='darker')
@@ -121,41 +121,47 @@ def fig1_1():
 
 def fig1_2():
     """Context ablation experiment design — caption Figure 1-2."""
-    W = 980
-    s = SVG(W, 500)
+    W = 1000
+    s = SVG(W, 470)
 
     s.text(W / 2, 30, 'Context Ablation Experiment Design', size=FS_TITLE, bold=True)
 
-    #Column Headers (Order Consistent with Removal Order in Main Experiment 1-1)
-    components = ['System Prompt', 'Tool Definitions', 'Tool Execution Results', 'Thought Process', 'History Messages']
-    comp_w = 105
+    # Two-line column headers so each fits its column without overlap.
+    components = [
+        ('System', 'prompt'),
+        ('Tool', 'definitions'),
+        ('Tool exec', 'results'),
+        ('Thought', 'process'),
+        ('History', 'messages'),
+    ]
+    comp_w = 108
     comp_gap = 10
-    total_comp = len(components) * comp_w + (len(components) - 1) * comp_gap
-    #Leave 110 for Row Labels on Left, 170 for Result Columns on Right
-    comp_x = 130
+    label_x = 168          # row labels right-anchored here
+    comp_x = 182           # check grid starts here
 
-    for i, comp in enumerate(components):
+    for i, (l1, l2) in enumerate(components):
         x = comp_x + i * (comp_w + comp_gap)
-        s.text(x + comp_w / 2, 65, comp, size=FS_SMALL, bold=True)
+        s.text(x + comp_w / 2, 56, l1, size=FS_SMALL, bold=True)
+        s.text(x + comp_w / 2, 76, l2, size=FS_SMALL, bold=True)
 
-    #Result Column Header
-    result_x = comp_x + len(components) * (comp_w + comp_gap) + 10  # = 705
-    s.text(result_x + 80, 65, 'Result', size=FS_SMALL, bold=True)
+    # Result column header
+    result_x = comp_x + len(components) * (comp_w + comp_gap) + 12
+    s.text(result_x + 90, 66, 'Result', size=FS_SMALL, bold=True)
 
-    # Experiment rows
+    # Experiment rows (labels shortened to sit within the left margin)
     conditions = [
-        ('Full Baseline', [True, True, True, True, True], '✓ Works Normally'),
-        ('No Tool Definitions', [True, False, True, True, True], '✗ Cannot Call Tools'),
-        ('No Tool Execution Results', [True, True, False, True, True], '✗ Blind Loop'),
-        ('No thinking process', [True, True, True, False, True], '△ Inconsistent decisions'),
+        ('Full baseline', [True, True, True, True, True], '✓ Works normally'),
+        ('No tool defs', [True, False, True, True, True], '✗ Cannot call tools'),
+        ('No tool results', [True, True, False, True, True], '✗ Blind loop'),
+        ('No reasoning', [True, True, True, False, True], '△ Inconsistent decisions'),
         ('No history', [True, True, True, True, False], '△ Repeated operations'),
     ]
 
     for j, (label, flags, result) in enumerate(conditions):
-        y = 95 + j * 72
+        y = 100 + j * 68
 
         # Row label
-        s.text(115, y + 28, label, size=FS_SMALL, bold=True, anchor='end')
+        s.text(label_x, y + 28, label, size=FS_SMALL, bold=True, anchor='end')
 
         for i, present in enumerate(flags):
             x = comp_x + i * (comp_w + comp_gap)
@@ -168,7 +174,7 @@ def fig1_2():
                 s.text(x + comp_w / 2, y + 28, '✗', size=FS_BODY, fill='dark')
 
         # Result (in its own column to the right of the check grid)
-        s.text(result_x + 80, y + 28, result, size=FS_SMALL,
+        s.text(result_x + 90, y + 28, result, size=FS_SMALL, anchor='middle',
                fill='text' if '✓' in result else ('text_light' if '△' in result else 'dark'))
 
     s.save(f'{OUT}/fig1-1.svg')  # Context ablation experiment → Figure 1-1

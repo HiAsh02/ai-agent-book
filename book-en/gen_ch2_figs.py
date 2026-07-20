@@ -397,19 +397,19 @@ def fig2_6():
     tx = 30
     tw = 760
 
-    # Column positions
-    cols = [
-        (tx, 145, 'Strategy'),
-        (tx + 150, 90, 'Token usage'),
-        (tx + 250, 65, 'Compression ratio'),
-        (tx + 325, 55, 'Iterations'),
-        (tx + 400, 65, 'Result'),
-        (tx + 475, 280, 'Visualization (Token usage comparison)'),
+    # Column header centers aligned to the data columns below (concise labels
+    # so nothing overlaps in the narrow columns).
+    header_y = 68
+    headers = [
+        (tx + 72, 'Strategy'),
+        (tx + 195, 'Tokens'),
+        (tx + 282, 'Ratio'),
+        (tx + 352, 'Iters'),
+        (tx + 432, 'Result'),
+        (tx + 475 + 90, 'Token usage'),
     ]
-
-    header_y = 65
-    for cx, cw, label in cols:
-        s.text(cx + cw / 2, header_y, label, size=FS_SMALL, bold=True)
+    for cx, label in headers:
+        s.text(cx, header_y, label, size=FS_SMALL, bold=True)
 
     s.line(tx, header_y + 12, tx + tw, header_y + 12)
 
