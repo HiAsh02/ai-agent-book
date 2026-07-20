@@ -15,10 +15,23 @@ import os
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable, Dict, Optional
 
+
+def _env_float(name: str, default: float) -> float:
+    """读取浮点环境变量；值非法时回退到默认值并打印警告。"""
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        print(f"⚠️ 环境变量 {name}={raw!r} 非法（应为数字），使用默认值 {default}")
+        return default
+
+
 # 1 个"模拟秒"对应的真实秒数（可用环境变量覆盖）。
 # 默认 0.4（2.5 倍速）：既压缩了等待，又给模型的"查询-判定-取消"决策留足时间窗口，
 # 保证场景 4 里"慢脚本尚未过 50% 就被取消"能稳定复现。
-TICK_REAL = float(os.getenv("FLUX_TICK_REAL", "0.4"))
+TICK_REAL = _env_float("FLUX_TICK_REAL", 0.4)
 
 # 不同脚本的"每模拟秒进度%"档位。实验 4-5 场景 4 需要 3% / 2% / 1% 的速度差。
 _SCRIPT_RATES = [

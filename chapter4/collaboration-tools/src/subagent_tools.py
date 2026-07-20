@@ -43,6 +43,19 @@ _subagents: Dict[str, Dict[str, Any]] = {}
 # Background tasks for async sub-agents, keyed by subagent_id.
 _async_tasks: Dict[str, "asyncio.Task"] = {}
 
+
+def _env_or_default(name: str, default, cast):
+    """Parse env var ``name`` with ``cast``; warn and fall back to ``default`` if malformed."""
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return cast(raw)
+    except ValueError:
+        logger.warning("Invalid %s=%r, falling back to default %r", name, raw, default)
+        return default
+
+
 # Default model + client tuning. Kept consistent with intelligence_tools.py
 # (gpt-5.6-luna) but overridable via env, with timeout + retries on the client.
 # When only OPENROUTER_API_KEY is set, resolve_llm() maps the model id to
@@ -50,8 +63,8 @@ _async_tasks: Dict[str, "asyncio.Task"] = {}
 DEFAULT_MODEL = (
     resolve_llm()[2] if has_llm() else os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 )
-_CLIENT_TIMEOUT = float(os.getenv("OPENAI_TIMEOUT", "60"))
-_CLIENT_MAX_RETRIES = int(os.getenv("OPENAI_MAX_RETRIES", "2"))
+_CLIENT_TIMEOUT = _env_or_default("OPENAI_TIMEOUT", 60.0, float)
+_CLIENT_MAX_RETRIES = _env_or_default("OPENAI_MAX_RETRIES", 2, int)
 
 
 def _offline() -> bool:

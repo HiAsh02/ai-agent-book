@@ -150,7 +150,9 @@ Current available tools: None (request tools as needed)"""
         response = self.client.chat.completions.create(**kwargs)
         
         # Track token usage
-        if hasattr(response, 'usage'):
+        # response.usage is Optional in the OpenAI SDK: the attribute always
+        # exists, but is None when the provider omits token accounting.
+        if getattr(response, 'usage', None):
             self.metrics['tokens_used'] += response.usage.total_tokens
         
         # Extract response content
@@ -347,7 +349,9 @@ Analyze the task and call the appropriate tool(s) to complete it."""
 
         response = self.client.chat.completions.create(**kwargs)
 
-        if hasattr(response, 'usage'):
+        # response.usage is Optional in the OpenAI SDK: the attribute always
+        # exists, but is None when the provider omits token accounting.
+        if getattr(response, 'usage', None):
             self.metrics['tokens_used'] += response.usage.total_tokens
 
         message = response.choices[0].message
@@ -474,7 +478,9 @@ All available tools have been pre-loaded. Analyze the task and use the appropria
         response = self.client.chat.completions.create(**kwargs)
         
         # Track token usage
-        if hasattr(response, 'usage'):
+        # response.usage is Optional in the OpenAI SDK: the attribute always
+        # exists, but is None when the provider omits token accounting.
+        if getattr(response, 'usage', None):
             self.metrics['tokens_used'] += response.usage.total_tokens
         
         message = response.choices[0].message

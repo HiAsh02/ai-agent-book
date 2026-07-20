@@ -18,6 +18,18 @@ import argparse
 import uvicorn
 
 
+def _env_int(name: str, default: int) -> int:
+    """Read an integer env var; fall back to default (with a warning) if malformed."""
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        logger.warning(f"Invalid {name} value: {raw!r} (must be an integer); using default {default}")
+        return default
+
+
 def _reasoning_safe_temperature(model, requested=1.0):
     """Reasoning models (Kimi K3, GPT-5, ...) only accept temperature=1.
     Return 1 for those; otherwise the requested value so non-reasoning
@@ -400,7 +412,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="监听地址（默认：0.0.0.0）",
     )
     parser.add_argument(
-        "--port", type=int, default=int(os.getenv("AGENT_PORT", "8000")),
+        "--port", type=int, default=_env_int("AGENT_PORT", 8000),
         help="监听端口（默认：环境变量 AGENT_PORT 或 8000）",
     )
     parser.add_argument(

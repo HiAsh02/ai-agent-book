@@ -419,6 +419,8 @@ async def extract_video_keyframes(
     try:
         path = validate_file_path(video_path)
         
+        num_frames = max(1, num_frames)
+        
         logging.info(f"🎬 Extracting keyframes from video: {path}")
         
         video = cv2.VideoCapture(str(path))
@@ -506,6 +508,8 @@ async def analyze_video_ai(
     """
     try:
         path = validate_file_path(video_path)
+
+        num_frames = max(1, num_frames)
 
         logging.info(f"🤖 AI analyzing video: {path}")
 
