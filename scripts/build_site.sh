@@ -19,6 +19,10 @@ for lang in book book-en book-ta book-vi; do
   cp -R "$ROOT/$lang" "$DEST/"
 done
 
+# Copy site-level assets (JS/CSS for the language switcher) that MkDocs
+# resolves relative to docs_dir.
+cp -R "$ROOT/extras" "$DEST/extras"
+
 # Keep only Markdown and images; drop .tex/.py/.lua/.pdf/.sh etc.
 find "$DEST" -type f \
   ! -name '*.md' \
@@ -26,6 +30,8 @@ find "$DEST" -type f \
   ! -name '*.png' \
   ! -name '*.jpg' \
   ! -name '*.jpeg' \
+  ! -name '*.js' \
+  ! -name '*.css' \
   -delete
 
 echo "Assembled docs into $DEST"

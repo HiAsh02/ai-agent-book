@@ -1,0 +1,46 @@
+/* ── Language switcher tab bar ──────────────────────────────────── */
+
+.lang-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0 0.75rem;
+  margin-bottom: -0.25rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.lang-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35em 0.9em;
+  font-size: 0.8em;
+  font-weight: 500;
+  color: var(--md-default-fg-color--light);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+.lang-tab:hover {
+  color: var(--md-accent-fg-color);
+  background: var(--md-accent-bg-color--light);
+  border-color: var(--md-accent-fg-color--light);
+}
+
+.lang-tab--active {
+  color: var(--md-accent-fg-color);
+  background: var(--md-accent-bg-color);
+  border-color: var(--md-accent-fg-color);
+  font-weight: 600;
+  cursor: default;
+}
+
+/* Dark mode tweaks */
+[data-md-color-scheme=""] .lang-tab:hover,
+[data-md-color-scheme="slate"] .lang-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
