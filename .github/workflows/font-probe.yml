@@ -1,0 +1,14 @@
+name: Probe fonts (temporary)
+
+on: workflow_dispatch
+
+jobs:
+  probe:
+    runs-on: macos-latest
+    steps:
+      - name: List relevant fonts
+        run: |
+          system_profiler SPFontsDataType -xml 2>/dev/null \
+            | grep -o '<string>[^<]*</string>' | sed 's/<[^>]*>//g' \
+            | grep -iE 'songti|heiti|kaiti|pingfang|fangsong|STSong|STHeiti|STXihei|STKaiti|Arial Unicode|Menlo|Yuanti|Xingkai|Baoli|Libian|Wawati|Weibei|Hannotate|Hanzipen|Lantinghei|Noto' \
+            | sort -u
