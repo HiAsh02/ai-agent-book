@@ -18,6 +18,7 @@
 | [model-benchmark](model-benchmark/) | ✅ | 对多家 OpenAI 兼容 API 横向压测 TTFT、p50/p95 延迟、吞吐与成功率，一条命令出对比表 |
 | [agent-cost-analysis](agent-cost-analysis/) | ✅ | 多轮 Agent 任务（客服退款）全链路成本拆解 + KV-cache 友好设计/上下文压缩的 A/B 节省量化 |
 | [tts-quality-eval](tts-quality-eval/) | ✅ | 多种 TTS 配置合成挑战文本，LLM-as-a-Judge 按 Rubric 逐维度打分，输出可复现对比表 |
+| [public-health-reporting-eval](public-health-reporting-eval/) | ✅ | 基于合成 DHIS2 风格汇总数据，客观评估公共卫生报告 Agent 的工具调用、计算准确性、证据引用与无依据声明 |
 
 > 📖 第 6 章全部为外部评测基准仓库，克隆命令见文末《附录 · 外部仓库获取》。[`chapter6/android-world/`](android-world/)（连字符命名）并非基准代码，而是本书对 T3A Agent 在 android_world 上失败案例的分析笔记（`t3a*.md`），可作为阅读材料参考。
 
