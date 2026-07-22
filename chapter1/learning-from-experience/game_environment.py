@@ -53,9 +53,12 @@ class TreasureHuntGame:
             seed: Random seed for reproducibility
             stochastic: If True, adds random elements to the game
         """
-        if seed is not None:
-            random.seed(seed)
-        
+        # NOTE: do not call random.seed() here. reset() re-runs __init__ once per
+        # episode with a fresh 14-bit seed, and the learning agents draw their
+        # exploration from the *global* random module -- reseeding it would pin
+        # that stream to one of only 10001 states per episode and make whole
+        # episodes repeat verbatim. The env's own randomness is self-contained
+        # in self.random_state below, which is still seeded from `seed`.
         self.stochastic = stochastic
         self.random_state = random.Random(seed) if stochastic else None
         
