@@ -19,25 +19,8 @@ description: 围绕核心公式 Agent = LLM + 上下文 + 工具,用 10 章把 A
 
 📥 [中文 PDF](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-zh-CN.pdf){.cta}
 📚 [中文 EPUB](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-zh-CN.epub){.cta}
-⭐ [GitHub Star](https://github.com/bojieli/ai-agent-book){.cta .secondary}
 
 </div>
-
-</div>
-
----
-
-## 这本书讲什么
-
-围绕核心公式 **Agent = LLM + 上下文 + 工具**,用 10 章把 AI Agent 从原理讲到工程实战。**全书正文、配图、92 个配套实验全部开源**,欢迎亲手把实验跑一遍。
-
-<div class="stat-row" markdown>
-
-📊 **10 章** 正文 · 从基础到生产
-
-📂 **92 个** 配套实验 · 70+ 可独立运行
-
-🌐 **5 种** 语言 · 中 / 繁 / 英 / 泰 / 越
 
 </div>
 
