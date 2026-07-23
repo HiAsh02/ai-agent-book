@@ -40,9 +40,15 @@
       "第10章 多Agent协作":   { en: "Chapter 10 · Multi-Agent Collaboration", ta: "அதி. 10 · பல-ஏஜெண்ட் ஒத்துழைப்பு", vi: "Chương 10 · Đa Agent cộng tác", zhtw: "第 10 章 · 多 Agent 協作" },
       "后记":         { en: "Afterword",       ta: "பின்னுரை",       vi: "Lời bạt",         zhtw: "後記" },
       "思考题参考答案": { en: "Reference Answers", ta: "பதில் வழிகாட்டி", vi: "Đáp án tham khảo", zhtw: "思考題參考答案" },
-      // Nested sub-entries (chapter prose + experiments).
-      "正文":         { en: "Prose",          ta: "உரை",          vi: "Nội dung",     zhtw: "正文" },
+      // Nested sub-entry under each chapter (the experiment index).
       "配套实验":     { en: "Experiments",    ta: "சோதனைகள்",     vi: "Thí nghiệm",   zhtw: "配套實驗" },
+    };
+
+    // Right-sidebar TOC title ("目录"), fixed by theme.language at build
+    // time — rewritten client-side on translated editions.
+    var TOC_TITLE = {
+      zh: "目录", zhtw: "目錄", en: "On this page",
+      ta: "உள்ளடக்கம்", vi: "Mục lục",
     };
 
     var SEARCH_STRINGS = {
@@ -197,6 +203,20 @@
 
         if (navText && NAV_I18N[currentText] && NAV_I18N[currentText][targetCode]) {
           navText.textContent = NAV_I18N[currentText][targetCode];
+        }
+      }
+
+      // Translate the right-sidebar TOC title. Only replace the text node —
+      // the label also contains the (mobile-only) back-arrow icon span.
+      if (TOC_TITLE[targetCode]) {
+        var tocTitles = document.querySelectorAll(".md-nav--secondary > .md-nav__title");
+        for (var t = 0; t < tocTitles.length; t++) {
+          var nodes = tocTitles[t].childNodes;
+          for (var n = 0; n < nodes.length; n++) {
+            if (nodes[n].nodeType === 3 && nodes[n].textContent.trim()) {
+              nodes[n].textContent = TOC_TITLE[targetCode];
+            }
+          }
         }
       }
 

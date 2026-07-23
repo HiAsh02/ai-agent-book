@@ -77,73 +77,127 @@
 }
 .md-search__input::placeholder { color: var(--fenix-ink-mute); }
 
-/* ── 2. 侧边栏:更宽、白底、单线分隔 ─────────────────────────── */
+/* ── 2. 左侧栏(书的目录树):白底、单线分隔 ─────────────────────
+   结构(navigation.sections + navigation.indexes):
+     <li class="md-nav__item--section md-nav__item--nested">
+       <div class="md-nav__container md-nav__link">
+         <a>章节标题(点击进入正文)</a>
+         <label>折叠箭头(点击展开/收起)</label>
+       </div>
+       <nav>…配套实验…</nav>
+     </li>
+   桌面端的折叠行为由 nav-collapse.js 注入的 CSS 控制。 */
 
-.md-sidebar {
-  width: 320px;       /* fenix 的实测宽度 */
-}
-@media screen and (min-width: 1220px) {
+/* 宽度只在桌面端覆写:移动端抽屉的收起位置被 Material 硬编码为
+   -12.1rem,改宽会让抽屉在收起时露出一条边(之前的 320px 全局
+   覆写正是这个 bug 的来源)。 */
+@media screen and (min-width: 76.25em) {
   .md-sidebar--primary {
+    width: 15.5rem;
     border-right: 1px solid var(--fenix-border);
   }
 }
 
 /* 侧边栏链接 —— 扁平、深蓝灰、无 hover 背景,只在 hover 时变墨绿 */
-.md-nav__item {
-  border-left: 2px solid transparent;
-  transition: border-color .12s;
-}
 .md-nav__link {
   color: var(--fenix-ink) !important;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   margin: 0;
-  padding: 6px 12px 6px 0;
+  padding: 6px 0 6px 0;
   transition: color .12s;
 }
 .md-nav__link:hover,
 .md-nav__link:hover * {
   color: var(--fenix-link-hover) !important;
 }
-/* 章节折叠头(<label for="...">):必须让它的整个区域接收点击并显示手型光标,
-   否则用户的鼠标点击会落在 <li> 上而不是 label 上,checkbox 不会翻转,
-   章节看起来"点不开也收不起"。 */
-.md-sidebar--primary .md-nav__item--nested > label.md-nav__link {
-  position: relative;
-  z-index: 2;                /* 在 <li> 之上接收点击 */
-  cursor: pointer;
+
+/* 章节标题行:标题 <a> 占满剩余宽度,箭头 <label> 靠右 */
+.md-sidebar--primary .md-nav__item--nested > .md-nav__container {
   display: flex;
   align-items: center;
-  width: 100%;               /* 占满整个章节条宽度,不只文字部分 */
-  box-sizing: border-box;
-  pointer-events: auto !important;   /* Material sets pointer-events:none on some labels */
+  padding: 0;
 }
-/* 章节项本身不要拦截点击 — pointer-events: none 让点击穿透到 label */
-.md-sidebar--primary .md-nav__item--nested {
-  position: relative;
-  cursor: pointer;
+.md-sidebar--primary .md-nav__item--nested > .md-nav__container > a.md-nav__link {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
 }
-/* 桌面端 sticky 站点标题(Material 默认 z-index:1)必须盖过章节
-   label(z-index:2),否则侧栏滚动时章节名会叠在站点标题上。 */
+
+/* 当前页面对应的链接 —— 墨绿高亮(章节标题或 配套实验 子项) */
+.md-sidebar--primary a.md-nav__link--active,
+.md-sidebar--primary a.md-nav__link--active * {
+  color: var(--fenix-link-hover) !important;
+}
+
+/* 展开后的子项(配套实验)—— 缩进一层、次级颜色、左侧细线示从属 */
+.md-sidebar--primary .md-nav__item--nested .md-nav .md-nav__link {
+  padding-left: 0.7rem;
+  border-left: 1px solid var(--fenix-border);
+  color: var(--fenix-ink-soft) !important;
+  font-weight: 400;
+}
+.md-sidebar--primary .md-nav__item--nested .md-nav .md-nav__link:hover,
+.md-sidebar--primary .md-nav__item--nested .md-nav .md-nav__link:hover * {
+  color: var(--fenix-link-hover) !important;
+}
+.md-sidebar--primary .md-nav__item--nested .md-nav a.md-nav__link--active {
+  border-left-color: var(--fenix-link-hover);
+}
+
+/* 侧栏顶部的 sticky 站点标题:压过下方内容,避免滚动时叠字;
+   背景跟随 fenix 底色(否则暗色模式下露出 Material 默认底色的色块) */
 @media screen and (min-width: 76.25em) {
   .md-nav--primary > .md-nav__title {
     z-index: 3;
+    background: var(--fenix-bg);
+    box-shadow: none;
   }
 }
-/* 当前激活的章节 —— 左侧一条墨绿色竖线(像 fenix 当前章节的视觉提示) */
-.md-nav__item--active {
-  border-left-color: var(--fenix-link-hover);
-}
-.md-nav__item--active > .md-nav__link {
-  color: var(--fenix-link-hover) !important;
-  font-weight: 500;
-}
 
-/* 章节分组标题(第1章/第2章...) —— 稍粗、深蓝灰 */
+/* 章节分组标题 —— 稍粗、深蓝灰 */
 .md-nav__title {
   color: var(--fenix-ink) !important;
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+/* ── 2b. 右侧栏(本页大纲):弱化存在感,阅读时的"你在这里" ──── */
+
+/* 同上:宽度只在桌面端覆写(移动端的收起位置同样被硬编码)。 */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--secondary {
+    width: 11.5rem;
+  }
+}
+.md-nav--secondary .md-nav__title {
+  color: var(--fenix-ink-mute) !important;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  box-shadow: none;
+  background: transparent;
+}
+.md-nav--secondary .md-nav__link {
+  color: var(--fenix-ink-soft) !important;
+  font-size: 0.72rem;
+  padding: 4px 0;
+}
+.md-nav--secondary .md-nav__link:hover,
+.md-nav--secondary .md-nav__link:hover * {
+  color: var(--fenix-link-hover) !important;
+}
+/* 当前阅读位置(toc.follow 跟随滚动) */
+.md-nav--secondary .md-nav__link--active,
+.md-nav--secondary .md-nav__link--active * {
+  color: var(--fenix-link-hover) !important;
+  font-weight: 500;
+}
+/* 大纲的层级缩进线 */
+.md-nav--secondary .md-nav__list .md-nav__list {
+  border-left: 1px solid var(--fenix-border);
+  padding-left: 0.55rem;
 }
 
 /* ── 3. 正文排版 ─────────────────────────────────────────────── */
@@ -443,6 +497,10 @@
   --fenix-code-ink:   #79c0ff;
   --fenix-link:       #e6edf3;
   --fenix-link-hover: #42b983;
+  /* 让正文区背景与 header/侧栏一致(否则 Material slate 的默认底色
+     略浅,sticky 站点标题处会露出一块深色矩形)。 */
+  --md-default-bg-color: #0d1117;
+  --md-default-fg-color: #e6edf3;
 }
 [data-md-color-scheme="slate"] .md-header,
 [data-md-color-scheme="slate"] .md-sidebar--primary {

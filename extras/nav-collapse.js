@@ -1,19 +1,30 @@
 /**
- * Desktop sidebar collapse for Material's nested nav.
+ * Desktop sidebar collapse for Material's chapter sections.
  *
- * Background: Material only collapses nested nav sections on mobile by
- * default. On desktop, the section's <nav class="md-nav"> is always
- * visible, regardless of the toggling checkbox state — so clicking the
- * chapter title appears to do nothing.
+ * Background: with `navigation.sections` + `navigation.indexes`, each
+ * chapter renders as
  *
- * Fix:
- *   1. Inject CSS to hide the nested <nav> when its checkbox is unchecked.
- *   2. Default-collapse every section except the one containing the active
- *      page (so non-current chapters start folded).
- *   3. Bind a click handler on each section's <label> that toggles the
- *      checkbox ourselves. The native <label for> indirection occasionally
- *      gets swallowed by parent <li> event handling, so we don't rely on
- *      it for the toggle.
+ *   <li class="md-nav__item--section md-nav__item--nested">
+ *     <input class="md-toggle" id="__nav_N">
+ *     <div class="md-nav__link md-nav__container">
+ *       <a href="…/chapterN/">chapter title</a>   ← navigates
+ *       <label for="__nav_N">chevron</label>      ← toggles
+ *     </div>
+ *     <nav class="md-nav">…配套实验…</nav>
+ *   </li>
+ *
+ * Material only honours the checkbox on mobile; on desktop the section
+ * subtree is always visible and the chevron is hidden. We inject CSS so
+ * that on desktop, too, the subtree follows the checkbox and the chevron
+ * is visible/clickable. Material checks the active chapter's checkbox at
+ * render time, so the default state (active chapter open, rest closed)
+ * comes for free.
+ *
+ * One case needs JS: on pages Material doesn't consider "active" — the
+ * translated editions (sidebar links are rewritten client-side by
+ * lang-switcher.js) and the per-experiment pages, which aren't in the
+ * nav — no checkbox is checked. There we match the current URL against
+ * each section's chapter number and open the matching section.
  *
  * Re-runs on every Material page swap (navigation.instant) via document$.
  */
@@ -24,12 +35,27 @@
     if (document.getElementById("nav-collapse-style")) return;
     var s = document.createElement("style");
     s.id = "nav-collapse-style";
-    // General-sibling selector: when the checkbox is unchecked, hide the
-    // sub-nav that follows it. Desktop only — Material handles mobile.
     s.textContent = [
-      "@media screen and (min-width: 960px) {",
+      "@media screen and (min-width: 76.25em) {",
+      // Collapse the subtree when the checkbox is unchecked (Material
+      // keeps section subtrees always-visible on desktop by default).
       "  .md-sidebar--primary .md-nav__item--nested > .md-toggle:not(:checked) ~ .md-nav {",
       "    display: none !important;",
+      "  }",
+      // Material hides the section chevron on desktop; bring it back and
+      // make it clickable.
+      "  .md-sidebar--primary .md-nav__item--nested > .md-nav__container > label.md-nav__link {",
+      "    display: flex;",
+      "    align-items: center;",
+      "    cursor: pointer;",
+      "    pointer-events: auto !important;",
+      "    margin: 0;",
+      "    padding: 0 0.2rem 0 0.4rem;",
+      "  }",
+      // Material's own stylesheet already rotates the chevron's ::after
+      // by 90° when the checkbox is checked — no extra transform here.
+      "  .md-sidebar--primary .md-nav__item--nested > .md-nav__container > label.md-nav__link .md-nav__icon {",
+      "    display: block;",
       "  }",
       "}",
     ].join("\n");
@@ -37,56 +63,29 @@
   }
 
   function applyDefaultState() {
-    var sections = document.querySelectorAll(
-      ".md-sidebar--primary .md-nav__item--nested"
-    );
-    if (!sections.length) return;
+    var sidebar = document.querySelector(".md-sidebar--primary");
+    if (!sidebar) return;
 
-    // Find which section contains the currently-active link. Material sets
-    // .md-nav__link--active on the <a> of the current page; we walk up the
-    // DOM to find its enclosing nested section. This is more reliable than
-    // checking section.classList.contains('--active'), which Material 9.x
-    // doesn't always set on the parent <li>.
-    // NOTE: For non-default languages, lang-switcher.js rewrites the sidebar
-    // link hrefs client-side, which means Material's initial active-link
-    // detection (done at render time on the original hrefs) misses. So
-    // on translated editions, nothing reports as active. To handle both
-    // cases we default-expand everything — readers can collapse to declutter.
-    var activeSection = null;
-    var activeLink = document.querySelector(
-      ".md-sidebar--primary a.md-nav__link--active"
-    );
-    if (activeLink) {
-      var node = activeLink;
-      while (node && node !== document) {
-        if (node.classList && node.classList.contains("md-nav__item--nested")) {
-          activeSection = node;
-          break;
-        }
-        node = node.parentElement;
+    // Material already checked a section's checkbox? Then its render-time
+    // active detection worked — nothing to fix up.
+    if (sidebar.querySelector(".md-nav__item--nested > .md-toggle:checked")) return;
+
+    // Otherwise (translated edition or a page outside the nav), derive the
+    // chapter from the URL and open the matching section.
+    var m = location.pathname.match(/chapter(\d+)/);
+    if (!m) return;
+    var wanted = m[1];
+    var sections = sidebar.querySelectorAll(".md-nav__item--nested");
+    for (var i = 0; i < sections.length; i++) {
+      var link = sections[i].querySelector(":scope > .md-nav__container > a.md-nav__link");
+      var checkbox = sections[i].querySelector(":scope > .md-toggle");
+      if (!link || !checkbox) continue;
+      var lm = (link.getAttribute("href") || "").match(/chapter(\d+)/);
+      if (lm && lm[1] === wanted) {
+        checkbox.checked = true;
+        break;
       }
     }
-
-    sections.forEach(function (section) {
-      var checkbox = section.querySelector(":scope > .md-toggle");
-      var label = section.querySelector(":scope > label.md-nav__link");
-      if (!checkbox) return;
-      // Don't re-set state on every SPA swap if user has already toggled;
-      // only initialise the first time we see this section.
-      if (section.dataset.navInit === "1") return;
-      section.dataset.navInit = "1";
-
-      var isActive = (section === activeSection) ||
-                     section.classList.contains("md-nav__item--active");
-      // If no section reports as active (common on translated editions where
-      // Material's active detection missed), default-expand this section so
-      // its sub-items remain reachable.
-      if (!activeSection) isActive = true;
-      checkbox.checked = !!isActive;
-      // NOTE: We do NOT bind our own click handler on the <label>. The native
-      // <label for="..."> mechanism already toggles the checkbox on click,
-      // and adding our own handler caused double-toggle bugs.
-    });
   }
 
   function init() {

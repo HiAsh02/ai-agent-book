@@ -22,6 +22,22 @@ for lang in book book-en book-ta book-vi book-zhtw; do
   cp -R "$ROOT/$lang" "$DEST/"
 done
 
+# Promote each chapter of the default (zh) edition to a directory index
+# (book/chapterN.md -> book/chapterN/index.md) so mkdocs.yml can use
+# navigation.indexes to attach the chapter prose to its nav section —
+# clicking a chapter title in the sidebar then opens the chapter directly.
+# The rendered URL is unchanged (/book/chapterN/, thanks to directory
+# URLs). The file now lives one directory deeper, so its relative image
+# references need a ../ prefix. Translated editions stay flat files: they
+# are not listed in the nav, so they gain nothing from the promotion.
+for n in 1 2 3 4 5 6 7 8 9 10; do
+  src="$DEST/book/chapter$n.md"
+  [ -f "$src" ] || continue
+  mkdir -p "$DEST/book/chapter$n"
+  sed -e 's|](images/|](../images/|g' "$src" > "$DEST/book/chapter$n/index.md"
+  rm "$src"
+done
+
 # The companion experiment directories (chapterN/). Each chapter has a
 # README.md (experiment index) plus one subfolder per experiment, also
 # documented by its own README.md. These are exposed under /chapterN/ so
